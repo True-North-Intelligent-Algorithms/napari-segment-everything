@@ -9,6 +9,8 @@ from qtpy.QtWidgets import (
     QSlider,
 )
 
+from qtpy.QtCore import Qt
+
 class LabeledMinMaxSlider(QWidget):
     def __init__(self, min_label_text, max_label_text, min_value, max_value, initial_min_value, initial_max_value, tick_interval, stat, change_value_method):
         super().__init__()
