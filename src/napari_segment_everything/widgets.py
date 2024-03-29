@@ -12,10 +12,10 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt
 
 class LabeledMinMaxSlider(QWidget):
-    def __init__(self, min_label_text, max_label_text, min_value, max_value, initial_min_value, initial_max_value, tick_interval, stat, change_value_method):
+    def __init__(self, text, min_value, max_value, initial_min_value, initial_max_value, tick_interval, stat, change_value_method):
         super().__init__()
 
-        self.min_label = QLabel(min_label_text)
+        self.label = QLabel(text)
         self.min_spinbox = QDoubleSpinBox()
         self.min_spinbox.setRange(min_value, max_value)
         self.min_spinbox.setValue(initial_min_value)
@@ -29,7 +29,6 @@ class LabeledMinMaxSlider(QWidget):
         self.min_slider.setTickInterval(tick_interval)
         self.min_slider.valueChanged.connect(self.change_value)
 
-        self.max_label = QLabel(max_label_text)
         self.max_spinbox = QDoubleSpinBox()
         self.max_spinbox.setRange(min_value, max_value)
         self.max_spinbox.setValue(initial_max_value)
@@ -44,19 +43,21 @@ class LabeledMinMaxSlider(QWidget):
         self.max_slider.valueChanged.connect(self.change_value)
 
         self.min_layout = QHBoxLayout()
-        self.min_layout.setContentsMargins(10, 2, 10, 2)  # adjust the margins around the layout
-        self.min_layout.addWidget(self.min_label)
+        self.min_layout.setContentsMargins(5, 1, 5, 1)  # adjust the margins around the layout
         self.min_layout.addWidget(self.min_slider)
         self.min_layout.addWidget(self.min_spinbox)
 
         self.max_layout = QHBoxLayout()
-        self.max_layout.setContentsMargins(10, 2, 10, 2)  # adjust the margins around the layout
-        self.max_layout.addWidget(self.max_label)
+        self.max_layout.setContentsMargins(5, 1, 5, 1)  # adjust the margins around the layout
         self.max_layout.addWidget(self.max_slider)
         self.max_layout.addWidget(self.max_spinbox)
 
         self.layout = QVBoxLayout()
-        self.layout.setContentsMargins(10, 2, 10, 2)  # adjust the margins around the layout
+        self.layout.setContentsMargins(5, 1, 5, 1)  # adjust the margins around the layout
+        # set spacing
+        self.layout.setSpacing(0)
+        
+        #self.layout.addWidget(self.label)
         self.layout.addLayout(self.min_layout)
         self.layout.addLayout(self.max_layout)
         self.setLayout(self.layout)
