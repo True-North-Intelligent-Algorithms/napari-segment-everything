@@ -1,14 +1,10 @@
 name: napari-segment-everything
 display_name: Napari Segment Everything
-# use 'hidden' to remove plugin from napari hub search results
-#visibility: public
-# see https://napari.org/stable/plugins/manifest.html for valid categories
-#categories: ["Annotation", "Segmentation"]
 contributions:
   commands:
     - id: napari-segment-everything.napari_segment_everything
       title: Napari Segment Everything
-      python_name: napari_segment_everything.napari_segment_everything:NapariSegmentEverything
+      python_name: napari_segment_everything.segment_everything:NapariSegmentEverything
   widgets:
     - command: napari-segment-everything.napari_segment_everything
       display_name: Napari Segment Everything
