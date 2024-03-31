@@ -110,6 +110,7 @@ class NapariSegmentEverything(QWidget):
         self.min_max_area_slider = LabeledMinMaxSlider("Area", 0, 1000000, 0, 1000000, 1000, 'area', self.change_stat)
         self.min_max_label_num_slider = LabeledMinMaxSlider("Label Num", 0, 1000, 0, 1000, 10, 'label_num', self.change_stat)
         self.min_max_solidity_slider = LabeledMinMaxSlider("Solidity", 0, 100, 0, 100, 1, 'solidity', self.change_stat)
+        self.min_max_circularity_slider = LabeledMinMaxSlider("Circularity", 0, 100, 0, 100, 1, 'circularity', self.change_stat)
         self.min_max_mean_intensity_slider = LabeledMinMaxSlider("Mean Intensity", 0, 255, 0, 255, 10, 'mean_intensity', self.change_stat)
         self.min_max_p10_intensity_slider = LabeledMinMaxSlider("10th Percentile Intensity", 0, 1000, 0, 1000, 10, '10th_percentile_intensity', self.change_stat)
         self.min_max_hue_slider = LabeledMinMaxSlider("Hue", 0, 255, 0, 255, 10, 'hue', self.change_stat)
@@ -117,10 +118,10 @@ class NapariSegmentEverything(QWidget):
         self.min_max_iou_slider = LabeledMinMaxSlider("IOU", 0, 100, 0, 100, 1, 'iou', self.change_stat)
         self.min_max_stability_score_slider = LabeledMinMaxSlider("Stability", 0, 100, 0, 100, 1, 'stability_score', self.change_stat)
 
-        self.sliders = [self.min_max_area_slider, self.min_max_label_num_slider, self.min_max_solidity_slider, self.min_max_mean_intensity_slider, self.min_max_p10_intensity_slider, self.min_max_hue_slider, self.min_max_saturation_slider, self.min_max_iou_slider, self.min_max_stability_score_slider]
+        self.sliders = [self.min_max_area_slider, self.min_max_label_num_slider, self.min_max_solidity_slider, self.min_max_circularity_slider, self.min_max_mean_intensity_slider, self.min_max_p10_intensity_slider, self.min_max_hue_slider, self.min_max_saturation_slider, self.min_max_iou_slider, self.min_max_stability_score_slider]
 
         self.combo_box = QComboBox()
-        self.combo_box.addItems(["Area", "Label Num", "Solidity", "Mean Intensity", "10th Percentile Intensity", "Hue", "Saturation", "IOU", "Stability Score"])
+        self.combo_box.addItems(["Area", "Label Num", "Solidity", "Circularity", "Mean Intensity", "10th Percentile Intensity", "Hue", "Saturation", "IOU", "Stability Score"])
         self.combo_box.currentIndexChanged.connect(self.change_slider)
 
         self.stacked_widget = QStackedWidget()
@@ -237,13 +238,18 @@ class NapariSegmentEverything(QWidget):
         min_stability_score = self.min_max_stability_score_slider.min_spinbox.value()/100
         max_stability_score = self.min_max_stability_score_slider.max_spinbox.value()/100
 
-        stats = ['area', 'label_num', 'solidity', 'mean_intensity', '10th_percentile_intensity', 'mean_hue', 'mean_saturation', 'predicted_iou', 'stability_score']
+        min_circularity = self.min_max_circularity_slider.min_spinbox.value()/100
+        max_circularity = self.min_max_circularity_slider.max_spinbox.value()/100
+
+        # TODO: change below to a dictionary to make it easier to add new stats
+
+        stats = ['area', 'label_num', 'solidity', 'circularity', 'mean_intensity', '10th_percentile_intensity', 'mean_hue', 'mean_saturation', 'predicted_iou', 'stability_score']
         mins = [self.min_max_area_slider.min_spinbox.value(), self.min_max_label_num_slider.min_spinbox.value(), 
-                self.min_max_solidity_slider.min_spinbox.value(), self.min_max_mean_intensity_slider.min_spinbox.value(), 
+                self.min_max_solidity_slider.min_spinbox.value(), min_circularity, self.min_max_mean_intensity_slider.min_spinbox.value(), 
                 self.min_max_p10_intensity_slider.min_spinbox.value(), self.min_max_hue_slider.min_spinbox.value(), self.min_max_saturation_slider.min_spinbox.value(),
                 min_iou, min_stability_score]
         maxs = [self.min_max_area_slider.max_spinbox.value(), self.min_max_label_num_slider.max_spinbox.value(), 
-                self.min_max_solidity_slider.max_spinbox.value(), self.min_max_mean_intensity_slider.max_spinbox.value(), 
+                self.min_max_solidity_slider.max_spinbox.value(), max_circularity, self.min_max_mean_intensity_slider.max_spinbox.value(), 
                 self.min_max_p10_intensity_slider.max_spinbox.value(), self.min_max_hue_slider.max_spinbox.value(), self.min_max_saturation_slider.max_spinbox.value(),
                 max_iou, max_stability_score]
         if self.results is not None:
