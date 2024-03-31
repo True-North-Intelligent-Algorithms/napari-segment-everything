@@ -102,7 +102,7 @@ class NapariSegmentEverything(QWidget):
 
         ##### 2.  Filter Results #####
 
-        self.filter_results_group = QGroupBox("Filter Results")
+        self.filter_results_group = QGroupBox("Filter 3D Results")
         self.filter_layout = QVBoxLayout()
         self.filter_results_group.setLayout(self.filter_layout)
 
@@ -333,4 +333,9 @@ class NapariSegmentEverything(QWidget):
         self.min_max_area_slider.max_spinbox.setRange(0, max_area)
         self.min_max_area_slider.min_slider.setRange(0, max_area)
         self.min_max_area_slider.max_slider.setRange(0, max_area)
+
+        for i in range(len(self.viewer.layers)):
+            if self.viewer.layers[i].name == "SAM 3D labels":
+                self.viewer.layers.move(i, -1)
+                break
 
