@@ -206,8 +206,7 @@ def add_properties_to_label_image(orig_image, sorted_results):
 
         # calculate circularity
         result['circularity'] = 4*np.pi*regions[0].area / (regions[0].perimeter**2)
-
-        result['solidity'] = 100*regions[0].solidity
+        result['solidity'] = regions[0].solidity
         intensity_pixels = intensity[coords]
         result['mean_intensity'] = np.mean(intensity_pixels)
         result['10th_percentile_intensity'] = np.percentile(intensity_pixels, 10)

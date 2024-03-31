@@ -110,17 +110,15 @@ class NapariSegmentEverything(QWidget):
         self.filter_results_group.setSizePolicy(sizePolicy)
 
         self.min_max_area_slider = LabeledMinMaxSlider("Area", 0, 1000000, 0, 1000000, 1000, 'area', self.change_stat)
-
-        self.min_max_label_num_slider = LabeledMinMaxSlider("Label Num", 0, 5000, 0, 5000, 10, 'label_num', self.change_stat)
-        
-        self.min_max_solidity_slider = LabeledMinMaxSlider("Solidity", 0, 100, 0, 100, 1, 'solidity', self.change_stat)
-        self.min_max_circularity_slider = LabeledMinMaxSlider("Circularity", 0, 100, 0, 100, 1, 'circularity', self.change_stat)
+        self.min_max_label_num_slider = LabeledMinMaxSlider("Label Num", 0, 500, 0, 500, 1, 'label_num', self.change_stat)
+        self.min_max_solidity_slider = LabeledMinMaxSlider("Solidity", 0, 1, 0, 1, .01, 'solidity', self.change_stat, True)
+        self.min_max_circularity_slider = LabeledMinMaxSlider("Circularity", 0, 1, 0, 1, .01, 'circularity', self.change_stat, True)
         self.min_max_mean_intensity_slider = LabeledMinMaxSlider("Mean Intensity", 0, 255, 0, 255, 10, 'mean_intensity', self.change_stat)
         self.min_max_p10_intensity_slider = LabeledMinMaxSlider("10th Percentile Intensity", 0, 1000, 0, 1000, 10, '10th_percentile_intensity', self.change_stat)
         self.min_max_hue_slider = LabeledMinMaxSlider("Hue", 0, 255, 0, 255, 10, 'hue', self.change_stat)
         self.min_max_saturation_slider = LabeledMinMaxSlider("Saturation", 0, 255, 0, 255, 10, 'saturation', self.change_stat)
-        self.min_max_iou_slider = LabeledMinMaxSlider("IOU", 0, 100, 0, 100, 1, 'iou', self.change_stat)
-        self.min_max_stability_score_slider = LabeledMinMaxSlider("Stability", 0, 100, 0, 100, 1, 'stability_score', self.change_stat)
+        self.min_max_iou_slider = LabeledMinMaxSlider("IOU", 0, 1, 0, 1, .01, 'iou', self.change_stat, True)
+        self.min_max_stability_score_slider = LabeledMinMaxSlider("Stability", 0, 1, 0, 1, .01, 'stability_score', self.change_stat, True)
 
         self.sliders = [self.min_max_area_slider, self.min_max_label_num_slider, self.min_max_solidity_slider, self.min_max_circularity_slider, self.min_max_mean_intensity_slider, self.min_max_p10_intensity_slider, self.min_max_hue_slider, self.min_max_saturation_slider, self.min_max_iou_slider, self.min_max_stability_score_slider]
 
@@ -167,8 +165,6 @@ class NapariSegmentEverything(QWidget):
         self.save_project_button = QPushButton("Save SAM project")
         self.save_project_button.clicked.connect(self.save_project)
         layout.addWidget(self.save_project_button)
-
-
         
         self.setLayout(layout)
 
@@ -230,9 +226,20 @@ class NapariSegmentEverything(QWidget):
         self._3D_labels_layer.data = label_image
         
         self.block_stats = True
+        #self.update_slider_min_max()
         self.min_max_label_num_slider.max_spinbox.setRange(0, label_num)
+        self.min_max_label_num_slider.max_slider.setRange(0, label_num)
         self.block_stats = False
 
+    def update_slider_min_max(self):
+
+        stats = ['area', 'label_num', 'solidity', 'circularity', 'mean_intensity', '10th_percentile_intensity', 'mean_hue', 'mean_saturation', 'predicted_iou', 'stability_score']
+        for stat in stats:
+            min_ = min([result[stat] for result in self.results])
+            max_ = max([result[stat] for result in self.results])
+
+            print(stat, min_, max_)
+        
     def change_stat(self, stat, min_value, max_value):
         if (self.block_stats == True):
             return
@@ -244,14 +251,14 @@ class NapariSegmentEverything(QWidget):
         min_stability_score = min([result['stability_score'] for result in self.results])
         max_stability_score = max([result['stability_score'] for result in self.results])
 
-        min_iou = self.min_max_iou_slider.min_spinbox.value()/100
-        max_iou = self.min_max_iou_slider.max_spinbox.value()/100
+        min_iou = self.min_max_iou_slider.min_spinbox.value()
+        max_iou = self.min_max_iou_slider.max_spinbox.value()
 
-        min_stability_score = self.min_max_stability_score_slider.min_spinbox.value()/100
-        max_stability_score = self.min_max_stability_score_slider.max_spinbox.value()/100
+        min_stability_score = self.min_max_stability_score_slider.min_spinbox.value()
+        max_stability_score = self.min_max_stability_score_slider.max_spinbox.value()
 
-        min_circularity = self.min_max_circularity_slider.min_spinbox.value()/100
-        max_circularity = self.min_max_circularity_slider.max_spinbox.value()/100
+        min_circularity = self.min_max_circularity_slider.min_spinbox.value()
+        max_circularity = self.min_max_circularity_slider.max_spinbox.value()
 
         # TODO: change below to a dictionary to make it easier to add new stats
 

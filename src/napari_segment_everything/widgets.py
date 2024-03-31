@@ -12,34 +12,54 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import Qt
 
 class LabeledMinMaxSlider(QWidget):
-    def __init__(self, text, min_value, max_value, initial_min_value, initial_max_value, tick_interval, stat, change_value_method):
+    def __init__(self, text, min_value, max_value, initial_min_value, initial_max_value, tick_interval, stat, change_value_method, scale_slider = False):
         super().__init__()
+
+        self.scale_slider = scale_slider
 
         self.label = QLabel(text)
         self.min_spinbox = QDoubleSpinBox()
         self.min_spinbox.setRange(min_value, max_value)
         self.min_spinbox.setValue(initial_min_value)
         self.min_spinbox.valueChanged.connect(self.change_value)
+        self.min_spinbox.setKeyboardTracking(False)
 
         self.min_slider = QSlider(Qt.Horizontal)
-        self.min_slider.setMinimum(min_value)
-        self.min_slider.setMaximum(max_value)
-        self.min_slider.setValue(initial_min_value)
-        self.min_slider.setTickPosition(QSlider.TicksBelow)
-        self.min_slider.setTickInterval(tick_interval)
+        if scale_slider == False:
+            self.min_slider.setMinimum(min_value)
+            self.min_slider.setMaximum(max_value)
+            self.min_slider.setValue(initial_min_value)
+            self.min_slider.setTickPosition(QSlider.TicksBelow)
+            self.min_slider.setTickInterval(tick_interval)
+        else:
+            self.min_slider.setMinimum(0)
+            self.min_slider.setMaximum(100)
+            self.min_slider.setValue(100 * int((initial_min_value - min_value) / (max_value - min_value)))
+            self.min_slider.setTickPosition(QSlider.TicksBelow)
+            self.min_slider.setTickInterval(1)
         self.min_slider.valueChanged.connect(self.change_value)
 
         self.max_spinbox = QDoubleSpinBox()
         self.max_spinbox.setRange(min_value, max_value)
         self.max_spinbox.setValue(initial_max_value)
         self.max_spinbox.valueChanged.connect(self.change_value)
+        self.max_spinbox.setKeyboardTracking(False)
 
         self.max_slider = QSlider(Qt.Horizontal)
-        self.max_slider.setMinimum(min_value)
-        self.max_slider.setMaximum(max_value)
-        self.max_slider.setValue(initial_max_value)
-        self.max_slider.setTickPosition(QSlider.TicksBelow)
-        self.max_slider.setTickInterval(tick_interval)
+        
+        if scale_slider == False:
+            self.max_slider.setMinimum(min_value)
+            self.max_slider.setMaximum(max_value)
+            self.max_slider.setValue(initial_max_value)
+            self.max_slider.setTickPosition(QSlider.TicksBelow)
+            self.max_slider.setTickInterval(tick_interval)
+        else:
+            self.max_slider.setMinimum(0)
+            self.max_slider.setMaximum(100)
+            self.max_slider.setValue(100 * int((initial_max_value - min_value) / (max_value - min_value)))
+            self.max_slider.setTickPosition(QSlider.TicksBelow)
+            self.max_slider.setTickInterval(1)
+        
         self.max_slider.valueChanged.connect(self.change_value)
 
         self.min_layout = QHBoxLayout()
@@ -71,16 +91,24 @@ class LabeledMinMaxSlider(QWidget):
             # Block signals from the spinboxes while changing their values
             self.min_spinbox.blockSignals(True)
             self.max_spinbox.blockSignals(True)
-            self.min_spinbox.setValue(self.min_slider.value())
-            self.max_spinbox.setValue(self.max_slider.value())
+            if self.scale_slider == False:
+                self.min_spinbox.setValue(self.min_slider.value())
+                self.max_spinbox.setValue(self.max_slider.value())
+            else:
+                self.min_spinbox.setValue(self.min_slider.value() * (self.max_spinbox.maximum() - self.max_spinbox.minimum()) / 100 + self.max_spinbox.minimum())
+                self.max_spinbox.setValue(self.max_slider.value() * (self.max_spinbox.maximum() - self.max_spinbox.minimum()) / 100 + self.max_spinbox.minimum())
             self.min_spinbox.blockSignals(False)
             self.max_spinbox.blockSignals(False)
         elif sender in [self.min_spinbox, self.max_spinbox]:
             # Block signals from the sliders while changing their values
             self.min_slider.blockSignals(True)
             self.max_slider.blockSignals(True)
-            self.min_slider.setValue(int(self.min_spinbox.value()))
-            self.max_slider.setValue(int(self.max_spinbox.value()))
+            if self.scale_slider == False:
+                self.min_slider.setValue(int(self.min_spinbox.value()))
+                self.max_slider.setValue(int(self.max_spinbox.value()))
+            else:
+                self.min_slider.setValue(int(100 * (self.min_spinbox.value() - self.max_spinbox.minimum()) / (self.max_spinbox.maximum() - self.max_spinbox.minimum())))
+                self.max_slider.setValue(int(100 * (self.max_spinbox.value() - self.max_spinbox.minimum()) / (self.max_spinbox.maximum() - self.max_spinbox.minimum())))
             self.min_slider.blockSignals(False)
             self.max_slider.blockSignals(False)
 
