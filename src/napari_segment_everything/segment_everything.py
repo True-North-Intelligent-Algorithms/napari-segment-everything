@@ -41,6 +41,8 @@ class NapariSegmentEverything(QWidget):
 
         self.results = None
 
+        self.block_stats = False
+
 
     def initUI(self):
         
@@ -108,7 +110,9 @@ class NapariSegmentEverything(QWidget):
         self.filter_results_group.setSizePolicy(sizePolicy)
 
         self.min_max_area_slider = LabeledMinMaxSlider("Area", 0, 1000000, 0, 1000000, 1000, 'area', self.change_stat)
-        self.min_max_label_num_slider = LabeledMinMaxSlider("Label Num", 0, 1000, 0, 1000, 10, 'label_num', self.change_stat)
+
+        self.min_max_label_num_slider = LabeledMinMaxSlider("Label Num", 0, 5000, 0, 5000, 10, 'label_num', self.change_stat)
+        
         self.min_max_solidity_slider = LabeledMinMaxSlider("Solidity", 0, 100, 0, 100, 1, 'solidity', self.change_stat)
         self.min_max_circularity_slider = LabeledMinMaxSlider("Circularity", 0, 100, 0, 100, 1, 'circularity', self.change_stat)
         self.min_max_mean_intensity_slider = LabeledMinMaxSlider("Mean Intensity", 0, 255, 0, 255, 10, 'mean_intensity', self.change_stat)
@@ -216,6 +220,7 @@ class NapariSegmentEverything(QWidget):
             result['label_num'] = label_num
             label_num += 1
 
+
         add_properties_to_label_image(self.image, self.results)
 
         label_image = make_label_image_3d(self.results)
@@ -223,8 +228,15 @@ class NapariSegmentEverything(QWidget):
         print(label_image.shape)
         
         self._3D_labels_layer.data = label_image
+        
+        self.block_stats = True
+        self.min_max_label_num_slider.max_spinbox.setRange(0, label_num)
+        self.block_stats = False
 
     def change_stat(self, stat, min_value, max_value):
+        if (self.block_stats == True):
+            return
+        
         # max of predicted_iou stat
         min_iou = min([result['predicted_iou'] for result in self.results])
         max_iou = max([result['predicted_iou'] for result in self.results])
@@ -322,7 +334,3 @@ class NapariSegmentEverything(QWidget):
         self.min_max_area_slider.min_slider.setRange(0, max_area)
         self.min_max_area_slider.max_slider.setRange(0, max_area)
 
-        self.min_max_label_num_slider.min_spinbox.setRange(0, 1000)
-        self.min_max_label_num_slider.max_spinbox.setRange(0, 1000)
-        self.min_max_label_num_slider.min_slider.setRange(0, 1000)
-        self.min_max_label_num_slider.max_slider.setRange(0, 1000)
