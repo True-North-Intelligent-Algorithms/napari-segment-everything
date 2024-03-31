@@ -1,4 +1,4 @@
 import numpy as np
 
-def dummy_test():
+def test_dumnmy():
     assert np.allclose(1, 1)
