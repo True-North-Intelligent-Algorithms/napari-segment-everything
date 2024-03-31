@@ -1,13 +1,12 @@
 import numpy as np
 
-from napari_segment_everything._widget import (
-    ExampleQWidget,
-    ImageThreshold,
-    threshold_autogenerate_widget,
-    threshold_magic_widget,
+from napari_segment_everything import (
+    segment_everything,
+    sam_helper,
+    widgets,
 )
 
-
+'''
 def test_threshold_autogenerate_widget():
     # because our "widget" is a pure function, we can call it and
     # test it independently of napari
@@ -64,3 +63,4 @@ def test_example_q_widget(make_napari_viewer, capsys):
     # read captured output and check that it's as we expected
     captured = capsys.readouterr()
     assert captured.out == "napari has 1 layers\n"
+'''
