@@ -1,10 +1,10 @@
 # napari-segment-everything
 
-[![License BSD-3](https://img.shields.io/pypi/l/napari-segment-everything.svg?color=green)](https://github.com/bnorthan/napari-segment-everything/raw/main/LICENSE)
+[![License BSD-3](https://img.shields.io/pypi/l/napari-segment-everything.svg?color=green)](https://github.com/True-North-Intelligent-Algorithms/napari-segment-everything/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/napari-segment-everything.svg?color=green)](https://pypi.org/project/napari-segment-everything)
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-segment-everything.svg?color=green)](https://python.org)
-[![tests](https://github.com/bnorthan/napari-segment-everything/workflows/tests/badge.svg)](https://github.com/bnorthan/napari-segment-everything/actions)
-[![codecov](https://codecov.io/gh/bnorthan/napari-segment-everything/branch/main/graph/badge.svg)](https://codecov.io/gh/bnorthan/napari-segment-everything)
+[![tests](https://github.com/True-North-Intelligent-Algorithms/napari-segment-everything/workflows/tests/badge.svg)](https://github.com/True-North-Intelligent-Algorithms/napari-segment-everything/actions)
+[![codecov](https://codecov.io/gh/True-North-Intelligent-Algorithms/napari-segment-everything/branch/main/graph/badge.svg)](https://codecov.io/gh/True-North-Intelligent-Algorithms/napari-segment-everything)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-segment-everything)](https://napari-hub.org/plugins/napari-segment-everything)
 
 A Napari SAM plugin to segment everything in your image (not just some things)
