@@ -114,9 +114,7 @@ def make_label_image_3d(masks):
     num_masks = len(masks)
     label_image = np.zeros( (num_masks, masks[0]['segmentation'].shape[0], masks[0]['segmentation'].shape[1]), dtype='uint16')
 
-    sorted_masks = sorted(masks, key=lambda x: x['area'], reverse=True)
-    
-    for enum, mask in enumerate(sorted_masks):
+    for enum, mask in enumerate(masks):
         mnarray = mask['segmentation']
         label_image[enum,:,:] = mnarray.astype('uint16') * (enum+1)
 
