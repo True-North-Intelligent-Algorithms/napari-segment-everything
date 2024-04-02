@@ -11,7 +11,7 @@ from skimage import color
 import toolz as tz
 from napari.utils import progress
 
-# copied from https://github.com/royerlab/napari-segment-anything/blob/main/src/napari_segment_anything/utils.py
+# Some code in this file copied from https://github.com/royerlab/napari-segment-anything/blob/main/src/napari_segment_anything/utils.py
 
 SAM_WEIGHTS_URL = {
     "default": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
