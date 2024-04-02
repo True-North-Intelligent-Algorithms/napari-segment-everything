@@ -27,9 +27,13 @@ from qtpy.QtWidgets import (
 class NapariSegmentEverything(QWidget):
 
     def __init__(self, napari_viewer, parent=None):
+
         QWidget.__init__(self, parent=parent)
         self.viewer = napari_viewer
 
+        self.results = None
+        self.block_stats = False
+        
         self.initUI()
 
         self._3D_labels_layer = self.viewer.add_labels(
@@ -39,17 +43,11 @@ class NapariSegmentEverything(QWidget):
 
         self.load_image(self.im_layer_widget.value)
 
-        self.results = None
-
-        self.block_stats = False
-
-
     def initUI(self):
         
         self.setWindowTitle('Segment Everything')
         layout = QVBoxLayout()
         layout.setSpacing(2)
-
 
         ##### 1.  SAM Parameters #####
 
@@ -71,6 +69,7 @@ class NapariSegmentEverything(QWidget):
         model_layout.addWidget(self.model_dropdown)
         self.sam_layout.addLayout(model_layout)
 
+        # control for selecting the image
         image_layout = QHBoxLayout()
         image_label = QLabel("Select Image")
         self.im_layer_widget = create_widget(annotation=Image, label="Image:")
@@ -148,7 +147,7 @@ class NapariSegmentEverything(QWidget):
         self.labels_options_layout = QHBoxLayout()
         self.labels_options_label = QLabel("2D Labels Options")
         self.labels_options_combo = QComboBox()
-        self.labels_options_combo.addItems(["Big in front", "Small in front"])
+        self.labels_options_combo.addItems(["Small in front", "Big in front"])
         self.labels_options_layout.addWidget(self.labels_options_label)
         self.labels_options_layout.addWidget(self.labels_options_combo)
         
@@ -188,7 +187,6 @@ class NapariSegmentEverything(QWidget):
 
     def save_project(self):
         options = QFileDialog.Options()
-        #options |= QFileDialog.DontUseNativeDialog
         file_name, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "", "Pickle Files (*.pkl)", options=options)
         if file_name:
             project = {'results': self.results, 'image': self.image}
@@ -207,7 +205,7 @@ class NapariSegmentEverything(QWidget):
         self._predictor = get_sam_automatic_mask_generator("vit_b", points_per_side=points_per_side, pred_iou_thresh=pred_iou_thresh, stability_score_thresh=stability_score_thresh, box_nms_thresh=box_nms_thresh)
         
         self.results = self._predictor.generate(self.image)
-        self.results = sorted(self.results, key=lambda x: x['area'], reverse=True)
+        self.results = sorted(self.results, key=lambda x: x['area'], reverse=False)
 
         print(len(self.results), 'objects found')
         label_num=1
@@ -215,7 +213,6 @@ class NapariSegmentEverything(QWidget):
             result['keep'] = True
             result['label_num'] = label_num
             label_num += 1
-
 
         add_properties_to_label_image(self.image, self.results)
 
@@ -226,10 +223,11 @@ class NapariSegmentEverything(QWidget):
         self._3D_labels_layer.data = label_image
         
         self.block_stats = True
-        #self.update_slider_min_max()
         self.min_max_label_num_slider.max_spinbox.setRange(0, label_num)
         self.min_max_label_num_slider.max_slider.setRange(0, label_num)
         self.block_stats = False
+
+        self.viewer.dims.ndisplay = 3
 
     def update_slider_min_max(self):
 
@@ -242,6 +240,12 @@ class NapariSegmentEverything(QWidget):
         
     def change_stat(self, stat, min_value, max_value):
         if (self.block_stats == True):
+            return
+        
+        if (self.viewer.dims.ndisplay != 3):
+            return
+        
+        if (self.results is None):
             return
         
         # max of predicted_iou stat
@@ -298,7 +302,7 @@ class NapariSegmentEverything(QWidget):
         
         label_image = self._3D_labels_layer.data
         
-        if min_max == "Big in front":
+        if min_max == "Small in front":
              # Create a masked array where zeros are masked
             masked_label_image = np.ma.masked_equal(label_image, 0)
             # Perform the min projection on the masked array
