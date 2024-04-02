@@ -88,19 +88,19 @@ def get_sam_predictor(model_type: str):
 
 def get_sam_automatic_mask_generator(model_type: str, points_per_side=32, pred_iou_thresh=0.1, stability_score_thresh=0.1, box_nms_thresh=0.5):
     sam = sam_model_registry[model_type](get_weights_path(model_type))
-
     sam_anything_predictor = SamAutomaticMaskGenerator(sam,
         points_per_side=int(points_per_side),
-        #points_per_batch=int(self.le_points_per_batch.text()),
+        #points_per_batch=64,
         pred_iou_thresh=pred_iou_thresh,
         stability_score_thresh=stability_score_thresh,
-        #stability_score_offset=float(self.le_stability_score_offset.text()),
+        #stability_score_offset=1.0
         box_nms_thresh=box_nms_thresh,
-        #crop_n_layers=int(self.le_crop_n_layers.text()),
-        #crop_nms_thresh=float(self.le_crop_nms_thresh.text()),
-        #crop_overlap_ratio=float(self.le_crop_overlap_ratio.text()),
-        #crop_n_points_downscale_factor=int(self.le_crop_n_points_downscale_factor.text()),
-        #min_mask_region_area=int(self.le_min_mask_region_area.text()),
+        #crop_n_layers=1,
+        #crop_nms_thresh=0.7,
+        #crop_overlap_ratio: float = 512 / 1500,
+        #crop_n_points_downscale_factor=1,
+        #in_mask_region_area=0,
+        #point_grids: Optional[List[np.ndarray]] = None,
         )
     #sam.to(self._device)
     return sam_anything_predictor
