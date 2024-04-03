@@ -47,16 +47,16 @@ class NapariSegmentEverything(QWidget):
         
         self.setWindowTitle('Segment Everything')
         layout = QVBoxLayout()
-        layout.setSpacing(2)
+        layout.setSpacing(30)
 
-        ##### 1.  SAM Parameters #####
+        ##### 1.  SAM Parameters ####
 
-        self.sam_parameters_group = QGroupBox("SAM Parameters")
+        self.sam_parameters_group = QGroupBox("1. Generate 3D labels")
         self.sam_layout = QVBoxLayout()
         self.sam_parameters_group.setLayout(self.sam_layout)
 
         # add open results button
-        self.open_project_button = QPushButton("Open SAM project")
+        self.open_project_button = QPushButton("Open previous...")
         self.open_project_button.clicked.connect(self.open_project)
         self.sam_layout.addWidget(self.open_project_button)
 
@@ -103,7 +103,7 @@ class NapariSegmentEverything(QWidget):
 
         ##### 2.  Filter Results #####
 
-        self.filter_results_group = QGroupBox("Filter 3D Results")
+        self.filter_results_group = QGroupBox("2. Filter 3D Labels")
         self.filter_layout = QVBoxLayout()
         self.filter_results_group.setLayout(self.filter_layout)
 
@@ -141,7 +141,7 @@ class NapariSegmentEverything(QWidget):
         
         layout.addWidget(self.filter_results_group)
 
-        self.make_2d_labels_groups = QGroupBox("Make 2D Labels")
+        self.make_2d_labels_groups = QGroupBox("3. Generate 2D Labels")
         self.make_2d_labels_layout = QVBoxLayout()
         self.make_2d_labels_groups.setLayout(self.make_2d_labels_layout)
         
