@@ -86,14 +86,16 @@ class NapariSegmentEverything(QWidget):
         self.pred_iou_thresh_spinner = LabeledSpinner("Pred IOU Threshold", 0, 1, 0.1, None, is_double=True)
         self.stability_score_thresh_spinner = LabeledSpinner("Stability Score Threshold", 0, 1, 0.1, None, is_double=True)
         self.box_nms_thresh_spinner = LabeledSpinner("Box NMS Threshold", 0, 1, 0.7, None, is_double=True)
+        self.crop_n_layers_spinner = LabeledSpinner("Crop N Layers", 1, 10, 1, None)
 
         self.sam_layout.addWidget(self.points_per_side_spinner)
         self.sam_layout.addWidget(self.pred_iou_thresh_spinner)
         self.sam_layout.addWidget(self.stability_score_thresh_spinner)
         self.sam_layout.addWidget(self.box_nms_thresh_spinner)
+        self.sam_layout.addWidget(self.crop_n_layers_spinner)
 
         # add process button
-        self.process_button = QPushButton("Process")
+        self.process_button = QPushButton("Generate 3D labels")
         self.process_button.clicked.connect(self.process)
         self.sam_layout.addWidget(self.process_button)
 
@@ -201,10 +203,17 @@ class NapariSegmentEverything(QWidget):
         pred_iou_thresh = self.pred_iou_thresh_spinner.spinner.value()
         stability_score_thresh = self.stability_score_thresh_spinner.spinner.value()
         box_nms_thresh = self.box_nms_thresh_spinner.spinner.value()
+        crop_n_layers = self.crop_n_layers_spinner.spinner.value()
         
-        self._predictor = get_sam_automatic_mask_generator("vit_b", points_per_side=points_per_side, pred_iou_thresh=pred_iou_thresh, stability_score_thresh=stability_score_thresh, box_nms_thresh=box_nms_thresh)
+        self._predictor = get_sam_automatic_mask_generator("vit_b", points_per_side=points_per_side, 
+                                                           pred_iou_thresh=pred_iou_thresh, 
+                                                           stability_score_thresh=stability_score_thresh, 
+                                                           box_nms_thresh=box_nms_thresh,
+                                                           crop_n_layers=crop_n_layers
+                                                           )
         
         self.results = self._predictor.generate(self.image)
+        
         self.results = sorted(self.results, key=lambda x: x['area'], reverse=False)
 
         print(len(self.results), 'objects found')

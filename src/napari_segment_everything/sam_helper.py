@@ -86,7 +86,13 @@ def get_sam_predictor(model_type: str):
     #sam.to(self._device)
     return SamPredictor(sam)
 
-def get_sam_automatic_mask_generator(model_type: str, points_per_side=32, pred_iou_thresh=0.1, stability_score_thresh=0.1, box_nms_thresh=0.5):
+def get_sam_automatic_mask_generator(model_type: str, 
+                                     points_per_side=32, 
+                                     pred_iou_thresh=0.1, 
+                                     stability_score_thresh=0.1, 
+                                     box_nms_thresh=0.5,
+                                     crop_n_layers=1):
+    
     sam = sam_model_registry[model_type](get_weights_path(model_type))
     sam_anything_predictor = SamAutomaticMaskGenerator(sam,
         points_per_side=int(points_per_side),
@@ -95,7 +101,7 @@ def get_sam_automatic_mask_generator(model_type: str, points_per_side=32, pred_i
         stability_score_thresh=stability_score_thresh,
         #stability_score_offset=1.0
         box_nms_thresh=box_nms_thresh,
-        #crop_n_layers=1,
+        crop_n_layers=crop_n_layers,
         #crop_nms_thresh=0.7,
         #crop_overlap_ratio: float = 512 / 1500,
         #crop_n_points_downscale_factor=1,
