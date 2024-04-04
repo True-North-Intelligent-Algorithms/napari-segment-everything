@@ -112,7 +112,7 @@ class NapariSegmentEverything(QWidget):
         self.pred_iou_thresh_spinner = LabeledSpinner("Pred IOU Threshold", 0, 1, 0.1, None, is_double=True)
         self.stability_score_thresh_spinner = LabeledSpinner("Stability Score Threshold", 0, 1, 0.1, None, is_double=True)
         self.box_nms_thresh_spinner = LabeledSpinner("Box NMS Threshold", 0, 1, 0.7, None, is_double=True)
-        self.crop_n_layers_spinner = LabeledSpinner("Crop N Layers", 1, 10, 1, None)
+        self.crop_n_layers_spinner = LabeledSpinner("Crop N Layers", 0, 10, 0, None)
 
         self.sam_layout.addWidget(self.points_per_side_spinner)
         self.sam_layout.addWidget(self.pred_iou_thresh_spinner)
