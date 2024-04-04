@@ -209,9 +209,12 @@ class NapariSegmentEverything(QWidget):
                 image = project['image']
                 self.viewer.add_image(image)
                 self.image = image
+        
         self._3D_labels_layer.data = make_label_image_3d(self.results)
+        self.viewer.dims.ndisplay = 3
 
         add_properties_to_label_image(self.image, self.results)
+        self.update_slider_min_max() 
 
     def save_project(self):
         options = QFileDialog.Options()
@@ -243,7 +246,8 @@ class NapariSegmentEverything(QWidget):
         self.results = sorted(self.results, key=lambda x: x['area'], reverse=False)
 
         print(len(self.results), 'objects found')
-        label_num=1
+        
+        label_num = 1
         for result in self.results:
             result['keep'] = True
             result['label_num'] = label_num
@@ -254,14 +258,9 @@ class NapariSegmentEverything(QWidget):
         label_image = make_label_image_3d(self.results)
 
         print(label_image.shape)
-        
-        self._3D_labels_layer.data = label_image
-        
-        self.block_stats = True
-        self.min_max_label_num_slider.max_spinbox.setRange(0, label_num)
-        self.min_max_label_num_slider.max_slider.setRange(0, label_num)
-        self.block_stats = False
 
+        self.update_slider_min_max() 
+        self._3D_labels_layer.data = label_image
         self.viewer.dims.ndisplay = 3
 
     def update_slider_min_max(self):
@@ -272,6 +271,17 @@ class NapariSegmentEverything(QWidget):
             max_ = max([result[stat] for result in self.results])
 
             print(stat, min_, max_)
+
+        num_labels = len(self.results)
+
+        self.block_stats = True
+        self.min_max_label_num_slider.min_spinbox.setRange(0, num_labels)
+        self.min_max_label_num_slider.max_spinbox.setRange(0, num_labels)
+        self.min_max_label_num_slider.min_slider.setRange(0, num_labels)
+        self.min_max_label_num_slider.max_slider.setRange(0, num_labels)
+        #self.min_max_label_num_slider.min_slider.setValue(0)
+        self.min_max_label_num_slider.max_slider.setValue(num_labels)
+        self.block_stats = False
         
     def change_stat(self, stat, min_value, max_value):
         if (self.block_stats == True):
@@ -384,4 +394,6 @@ class NapariSegmentEverything(QWidget):
             if self.viewer.layers[i].name == "SAM 3D labels":
                 self.viewer.layers.move(i, -1)
                 break
+
+        
 
