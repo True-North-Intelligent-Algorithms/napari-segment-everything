@@ -1,11 +1,9 @@
-import matplotlib.pyplot as plt
 from magicgui.widgets import create_widget
 from napari.layers import Image
 import numpy as np
 from skimage import color, util
 from typing import Optional
 
-from sympy import im
 from napari_segment_everything.widgets import LabeledSpinner, LabeledMinMaxSlider
 from napari_segment_everything.sam_helper import get_sam_automatic_mask_generator, make_label_image_3d, add_properties_to_label_image, filter_labels_3d_multi
 import pickle
