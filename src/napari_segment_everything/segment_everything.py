@@ -19,7 +19,8 @@ from qtpy.QtWidgets import (
     QFileDialog,
     QStackedWidget,
     QGroupBox,
-    QSizePolicy
+    QSizePolicy,
+    QMessageBox
 )
 
 class NapariSegmentEverything(QWidget):
@@ -39,7 +40,34 @@ class NapariSegmentEverything(QWidget):
             name="SAM 3D labels",
         )
 
+        self._3D_labels_layer.mouse_double_click_callbacks.append(self.test_double_click)
         self.load_image(self.im_layer_widget.value)
+
+        self.msg = QMessageBox()
+
+    def test_double_click(self, layer, event):
+        index = int(layer._value)-1  
+
+        result = self.results[index]
+        stats = [
+            f"Area: {result['area']}",
+            f"Circularity: {result['circularity']:.2f}",
+            f"Solidity: {result['solidity']:.2f}",
+            f"Mean intensity: {result['mean_intensity']:.2f}",
+            f"10th percentile intensity: {result['10th_percentile_intensity']:.2f}",
+            f"Mean hue: {result['mean_hue']:.2f}",
+            f"Mean saturation: {result['mean_saturation']:.2f}",
+            f"Predicted IOU: {result['predicted_iou']:.2f}",
+            f"Stability score: {result['stability_score']:.2f}",
+        ]
+        stats_text = "\n".join(stats)
+
+        self.msg.setIcon(QMessageBox.Information)
+        self.msg.setText("Result Stats")
+        self.msg.setInformativeText(stats_text)
+        self.msg.setWindowTitle("Result Stats")
+        self.msg.setModal(True)
+        self.msg.show()
 
     def initUI(self):
         
