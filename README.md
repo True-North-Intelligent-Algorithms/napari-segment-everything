@@ -21,14 +21,27 @@ and review the napari docs for plugin developers:
 https://napari.org/stable/plugins/index.html
 -->
 
+https://github.com/True-North-Intelligent-Algorithms/napari-segment-everything/assets/4366342/1f451e4a-bf66-4b77-a91d-4fa283270160
+
 ## Installation
 
 You can install `napari-segment-everything` via [pip]:
 
     pip install napari-segment-everything
 
+## Instructions
 
+### 1. Generate 3D labels
 
+In the first step adjust SAM settings and generate a 3D representation of your labels.  The 3D view is needed to represent overlapping labels (labels that overlap in xy can be represented at different z).  After tweaking settings press 'Generate 3D labels'.  Be patient.  SAM with permissive settings can potentially find thousands of labels in a complicated image.  At least 6G of GPU memory is recommended to run SAM and to render to 3D label map (which can be large). 
+
+### 2. Filter 3D labels
+
+In the next step select a stat (solidity, hue, IOE, stability and other stats are available) then use the sliders and number boxes to filter out labels that do not represent structure of interest.  If you double click on a label a popup will appear containing the stats for that label.  Inpect stats for labels you want to keep, and labels you want to eliminate to help determine the filter settings. 
+
+### 3. Generate 2D labels
+
+In this step the 3D labels are projected to a 2D label map, use the dropdown to choose between projecting big labels in front or small labels in front.
 
 ## Contributing
 
