@@ -212,6 +212,7 @@ class NapariSegmentEverything(QWidget):
         
         self._3D_labels_layer.data = make_label_image_3d(self.results)
         self.viewer.dims.ndisplay = 3
+        self._3D_labels_layer.translate = (-len(self.results), 0, 0)
 
         add_properties_to_label_image(self.image, self.results)
         self.update_slider_min_max() 
@@ -262,7 +263,7 @@ class NapariSegmentEverything(QWidget):
         self.update_slider_min_max() 
         self._3D_labels_layer.data = label_image
         self.viewer.dims.ndisplay = 3
-
+        self._3D_labels_layer.translate = (-len(self.results), 0, 0)
     def update_slider_min_max(self):
 
         stats = ['area', 'label_num', 'solidity', 'circularity', 'mean_intensity', '10th_percentile_intensity', 'mean_hue', 'mean_saturation', 'predicted_iou', 'stability_score']
