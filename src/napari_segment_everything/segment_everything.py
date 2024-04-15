@@ -41,6 +41,7 @@ class NapariSegmentEverything(QWidget):
         )
 
         self._3D_labels_layer.mouse_double_click_callbacks.append(self.test_double_click)
+        self._3D_labels_layer.mouse_wheel_callbacks.append(self.push_layer_back)
         self.load_image(self.im_layer_widget.value)
 
         self.msg = QMessageBox()
@@ -89,7 +90,7 @@ class NapariSegmentEverything(QWidget):
         # Dropdown for selecting the model
         model_label = QLabel("Select Model")# Dropdown for selecting the model
         self.model_dropdown = QComboBox()
-        self.model_dropdown.addItems(["vit_b"])
+        self.model_dropdown.addItems(["vit_b", "mobileSAMv2"])
         model_layout = QHBoxLayout()
         model_layout.addWidget(model_label)
         model_layout.addWidget(self.model_dropdown)
@@ -357,6 +358,14 @@ class NapariSegmentEverything(QWidget):
             labels = np.max(label_image, axis=0)
         self.viewer.add_labels(labels, name="2D labels")
      
+    # @label_layer_spaced.mouse_wheel_callbacks.append
+    def push_layer_back(self, label_layer, event, numspace=0):
+        """Pushes the current layer to the back to visualize the layers behind"""
+        if "Shift" in event.modifiers:
+            label_layer.data = np.roll(
+                    label_layer.data, -(numspace + 1), axis=0
+                    )
+
     def load_image(self, im_layer: Optional[Image]) -> None:
         
         if im_layer is None:
