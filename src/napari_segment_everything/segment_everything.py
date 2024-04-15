@@ -229,19 +229,23 @@ class NapariSegmentEverything(QWidget):
     def process(self):
         if self.image is None:
             return
-        
+        model_selection = self.model_dropdown.currentText()  
+
         points_per_side = self.points_per_side_spinner.spinner.value()
         pred_iou_thresh = self.pred_iou_thresh_spinner.spinner.value()
         stability_score_thresh = self.stability_score_thresh_spinner.spinner.value()
         box_nms_thresh = self.box_nms_thresh_spinner.spinner.value()
         crop_n_layers = self.crop_n_layers_spinner.spinner.value()
         
-        self._predictor = get_sam_automatic_mask_generator("vit_b", points_per_side=points_per_side, 
-                                                           pred_iou_thresh=pred_iou_thresh, 
-                                                           stability_score_thresh=stability_score_thresh, 
-                                                           box_nms_thresh=box_nms_thresh,
-                                                           crop_n_layers=crop_n_layers
-                                                           )
+        
+        if model_selection == "vit_b":
+            self._predictor = get_sam_automatic_mask_generator(model_selection, 
+                                                               points_per_side=points_per_side, 
+                                                               pred_iou_thresh=pred_iou_thresh, 
+                                                               stability_score_thresh=stability_score_thresh, 
+                                                               box_nms_thresh=box_nms_thresh,
+                                                               crop_n_layers=crop_n_layers
+                                                               )
         
         self.results = self._predictor.generate(self.image)
         
