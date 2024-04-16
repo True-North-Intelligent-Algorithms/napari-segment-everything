@@ -31,6 +31,12 @@ You can install `napari-segment-everything` via [pip]:
 
 ## Instructions
 
+### 0. To use the mobileSAMv2 model, some additional setup is needed!
+Model weights need to be first downloaded from here: https://github.com/ChaoningZhang/MobileSAM/tree/master?tab=readme-ov-file#getting-started-mobilesamv2
+- Unzip the models
+- Put the "ObjectAwareModel.pt" in 'napari-segment-everything/src/napari\_segment\_everything\minimalDetection\object\_detection\weight' directory.
+- Put the other pytorch models in 'napari-segment-everything/src/napari\_segment\_everything\minimalDetection\weight' directory. 
+
 ### 1. Generate 3D labels
 
 In the first step adjust SAM settings and generate a 3D representation of your labels.  The 3D view is needed to represent overlapping labels (labels that overlap in xy can be represented at different z).  After tweaking settings press 'Generate 3D labels'.  Be patient.  SAM with permissive settings can potentially find thousands of labels in a complicated image.  At least 6G of GPU memory is recommended to run SAM and to render to 3D label map (which can be large). 

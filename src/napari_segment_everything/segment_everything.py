@@ -75,8 +75,8 @@ class NapariSegmentEverything(QWidget):
             f"10th percentile intensity: {result['10th_percentile_intensity']:.2f}",
             f"Mean hue: {result['mean_hue']:.2f}",
             f"Mean saturation: {result['mean_saturation']:.2f}",
-            f"Predicted IOU: {result['predicted_iou']:.2f}",
-            f"Stability score: {result['stability_score']:.2f}",
+            #            f"Predicted IOU: {result['predicted_iou']:.2f}",
+            #            f"Stability score: {result['stability_score']:.2f}",
         ]
         stats_text = "\n".join(stats)
 
