@@ -26,9 +26,8 @@ sys.path.insert(0, obj_detect_dir)
 from .object_detection.ultralytics.prompt_mobilesamv2 import ObjectAwareModel
 
 
-def create_OA_model():
-    obj_model_path = os.path.join(obj_detect_dir, "weight/ObjectAwareModel.pt")
-    ObjAwareModel = ObjectAwareModel(obj_model_path)
+def create_OA_model(weights_path):
+    ObjAwareModel = ObjectAwareModel(weights_path)
     return ObjAwareModel
 
 

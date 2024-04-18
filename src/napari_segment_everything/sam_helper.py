@@ -26,6 +26,7 @@ import toolz as tz
 from napari.utils import progress
 
 import numpy as np
+import gdown
 
 # Some code in this file copied from https://github.com/royerlab/napari-segment-anything/blob/main/src/napari_segment_anything/utils.py
 
@@ -34,7 +35,11 @@ SAM_WEIGHTS_URL = {
     "vit_h": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
     "vit_l": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
     "vit_b": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
+    "ObjectAwareModel": "https://drive.google.com/uc?id=1_vb_0SHBUnQhtg5SEE24kOog9_5Qpk5Z/ObjectAwareModel.pt",
+    "efficientvit_l2": "https://drive.google.com/uc?id=10Emd1k9obcXZZALiqlW8FLIYZTfLs-xu/l2.pt",
 }
+# gdown.download("https://drive.google.com/uc?id=10Emd1k9obcXZZALiqlW8FLIYZTfLs-xu", output="l2.pt")
+# gdown.download("https://drive.google.com/uc?id=1_vb_0SHBUnQhtg5SEE24kOog9_5Qpk5Z", output="ObjectAwareModel.pt")
 
 
 @tz.curry
@@ -61,9 +66,14 @@ def download_weights(weight_url: str, weight_path: "Path"):
     print(f"Downloading {weight_url} to {weight_path} ...")
     pbr = progress(total=100)
     try:
-        urllib.request.urlretrieve(
-            weight_url, weight_path, reporthook=_report_hook(pbr=pbr)
-        )
+        if weight_url.startswith("https://drive.google.com/"):
+            google_weight_url = "/".join(weight_url.split("/")[0:-1])
+
+            gdown.download(google_weight_url, str(weight_path))
+        else:
+            urllib.request.urlretrieve(
+                weight_url, weight_path, reporthook=_report_hook(pbr=pbr)
+            )
     except (
         urllib.error.HTTPError,
         urllib.error.URLError,
@@ -82,7 +92,6 @@ def get_weights_path(model_type: str) -> Optional[Path]:
 
     cache_dir = Path.home() / ".cache/tnia-sam"
     cache_dir.mkdir(parents=True, exist_ok=True)
-
     weight_path = cache_dir / weight_url.split("/")[-1]
 
     # Download the weights if they don't exist
@@ -136,7 +145,8 @@ def get_sam_automatic_mask_generator(
 def get_bounding_boxes(
     image, imgsz=1024, conf=0.4, iou=0.9, device="cpu", max_det=400
 ):
-    objAwareModel = create_OA_model()
+    weights_path_OA = get_weights_path("ObjectAwareModel")
+    objAwareModel = create_OA_model(weights_path_OA)
 
     """Uses an object-aware model (YOLOv8) to determine the bounding boxes of objects"""
     obj_results = detect_bbox(
@@ -158,14 +168,8 @@ def get_mobileSAMv2(image=None):
         print("Upload an image first")
         return
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    weights_path = os.path.join(
-        os.path.dirname(__file__), "minimalDetection/weight"
-    )
-    encoder_path = {
-        "efficientvit_l2": os.path.join(weights_path, "l2.pt"),
-        "tiny_vit": os.path.join(weights_path, "mobile_sam.pt"),
-        "sam_vit_h": os.path.join(weights_path, "sam_vit_h.pt"),
-    }
+    # device = "cpu"
+    weights_path_VIT = get_weights_path("efficientvit_l2")
 
     if isinstance(image, str):
         # For reading from paths
@@ -178,11 +182,10 @@ def get_mobileSAMv2(image=None):
     bounding_boxes = obj_results[0].boxes.xyxy.cpu().numpy()
 
     samV2 = create_MS_model()
-    image_encoder = sam_model_registry["efficientvit_l2"](
-        encoder_path["efficientvit_l2"]
-    )
 
-    samV2.image_encoder = image_encoder
+    samV2.image_encoder = sam_model_registry["efficientvit_l2"](
+        weights_path_VIT
+    )
     samV2.to(device=device)
     samV2.eval()
     predictor = SamPredictorV2(samV2)
