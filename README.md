@@ -23,19 +23,10 @@ https://napari.org/stable/plugins/index.html
 
 https://github.com/True-North-Intelligent-Algorithms/napari-segment-everything/assets/4366342/1f451e4a-bf66-4b77-a91d-4fa283270160
 
-## Installation
-
-You can install `napari-segment-everything` via [pip]:
-
-    pip install napari-segment-everything
-
 ## Instructions
 
-### 0. To use the mobileSAMv2 model, some additional setup is needed!
-Model weights need to be first downloaded from here: https://github.com/ChaoningZhang/MobileSAM/tree/master?tab=readme-ov-file#getting-started-mobilesamv2
-- Unzip the models
-- Put the "ObjectAwareModel.pt" in 'napari-segment-everything/src/napari\_segment\_everything\minimalDetection\object\_detection\weight' directory.
-- Put the other pytorch models in 'napari-segment-everything/src/napari\_segment\_everything\minimalDetection\weight' directory. 
+### 0. This implementation
+Right now, this model can be downloaded as-is from the Github and installed using `pip install -e .`
 
 ### 1. Generate 3D labels
 
