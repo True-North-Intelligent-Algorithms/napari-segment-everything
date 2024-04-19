@@ -23,13 +23,10 @@ https://napari.org/stable/plugins/index.html
 
 https://github.com/True-North-Intelligent-Algorithms/napari-segment-everything/assets/4366342/1f451e4a-bf66-4b77-a91d-4fa283270160
 
-## Installation
-
-You can install `napari-segment-everything` via [pip]:
-
-    pip install napari-segment-everything
-
 ## Instructions
+
+### 0. This implementation
+Right now, this model can be downloaded as-is from the Github and installed using `pip install -e .`
 
 ### 1. Generate 3D labels
 
