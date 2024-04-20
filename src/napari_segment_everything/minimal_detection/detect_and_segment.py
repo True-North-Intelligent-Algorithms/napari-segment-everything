@@ -27,8 +27,8 @@ from .object_detection.ultralytics.prompt_mobilesamv2 import ObjectAwareModel
 
 
 def create_OA_model(weights_path):
-    ObjAwareModel = ObjectAwareModel(weights_path)
-    return ObjAwareModel
+    object_aware_model = ObjectAwareModel(weights_path)
+    return object_aware_model
 
 
 def create_MS_model():
@@ -56,7 +56,7 @@ def batch_iterator(batch_size: int, *args) -> Generator[List[Any], None, None]:
 
 
 def detect_bbox(
-    ObjAwareModel,
+    object_aware_model,
     image,
     imgsz=1024,
     conf=0.4,
@@ -69,7 +69,7 @@ def detect_bbox(
 
     Returns a list of bounding boxes, as well as extra properties.
     """
-    obj_results = ObjAwareModel(
+    obj_results = object_aware_model(
         image,
         device=device,
         retina_masks=True,

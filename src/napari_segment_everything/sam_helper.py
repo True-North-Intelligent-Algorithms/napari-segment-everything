@@ -1,12 +1,12 @@
 from segment_anything import SamPredictor
 from segment_anything.automatic_mask_generator import SamAutomaticMaskGenerator
-from napari_segment_everything.minimalDetection.detect_and_segment import (
+from napari_segment_everything.minimal_detection.detect_and_segment import (
     create_OA_model,
     create_MS_model,
     detect_bbox,
     segment_from_bbox,
 )
-from napari_segment_everything.minimalDetection.mobilesamv2 import (
+from napari_segment_everything.minimal_detection.mobilesamv2 import (
     sam_model_registry,
     SamPredictor as SamPredictorV2,
 )
