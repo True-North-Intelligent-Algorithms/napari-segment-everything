@@ -61,6 +61,15 @@ class NapariSegmentEverything(QWidget):
         )
         self.load_image(self.im_layer_widget.value)
 
+        self._pts_layer = self.viewer.add_points( name = "SAM points")
+
+        self._boxes_layer = self.viewer.add_shapes(
+            name="SAM box",
+            face_color="transparent",
+            edge_color="green",
+            edge_width=2,
+        )
+
         self.msg = QMessageBox()
 
     def test_double_click(self, layer, event):
@@ -372,11 +381,11 @@ class NapariSegmentEverything(QWidget):
 
         if model_selection == "mobileSAMv2":
             #           self.results = get_mobileSAMv2(model_selection)
-            segmentations = get_mobileSAMv2(self.image)
+            segmentations, bounding_boxes = get_mobileSAMv2(self.image)
             self.results = list()
-            for seg in segmentations:
+            for seg, bbox in zip(segmentations, bounding_boxes):
                 self.results.append(
-                    {"segmentation": seg, "area": sum(sum(seg))}
+                    {"segmentation": seg, "area": sum(sum(seg)), "bbox": bbox}
                 )
             # self._predictor =
         self.results = sorted(
@@ -396,6 +405,9 @@ class NapariSegmentEverything(QWidget):
         label_image = make_label_image_3d(self.results)
 
         print(label_image.shape)
+
+        self.add_points()
+        self.add_boxes()
 
         self.update_slider_min_max()
         self._3D_labels_layer.data = label_image
@@ -597,8 +609,38 @@ class NapariSegmentEverything(QWidget):
         self.min_max_area_slider.max_spinbox.setRange(0, max_area)
         self.min_max_area_slider.min_slider.setRange(0, max_area)
         self.min_max_area_slider.max_slider.setRange(0, max_area)
+        
+        for i in range(len(self.viewer.layers)):
+            if self.viewer.layers[i].name == "SAM box":
+                self.viewer.layers.move(i, -1)
+                break
+
+        for i in range(len(self.viewer.layers)):
+            if self.viewer.layers[i].name == "SAM points":
+                self.viewer.layers.move(i, -1)
+                break
 
         for i in range(len(self.viewer.layers)):
             if self.viewer.layers[i].name == "SAM 3D labels":
                 self.viewer.layers.move(i, -1)
                 break
+
+    def add_points(self):
+        # delete old points
+        self._pts_layer.data = []
+        for result in self.results:
+            # if point_coords is a key
+            if "point_coords" in result:
+                point = result["point_coords"][0]
+                point = [point[1], point[0]]
+                self._pts_layer.add(point)
+
+    def add_boxes(self):
+        # delete old boxes
+        self._boxes_layer.data = []
+        for result in self.results:
+            # if point_coords is a key
+            if "bbox" in result:
+                bbox = result["bbox"]
+                bbox = [[bbox[1], bbox[0]], [bbox[3], bbox[2]]]
+                self._boxes_layer.add(bbox)

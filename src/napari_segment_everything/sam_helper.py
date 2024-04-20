@@ -184,7 +184,7 @@ def get_mobileSAMv2(image=None):
     else:
         im = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    obj_results = get_bounding_boxes(image=im, device=device)
+    obj_results = get_bounding_boxes(image=im, device=device, iou=0.2, conf=0.2)
     bounding_boxes = obj_results[0].boxes.xyxy.cpu().numpy()
 
     samV2 = create_MS_model()
@@ -198,13 +198,13 @@ def get_mobileSAMv2(image=None):
     predictor.set_image(image)
     sam_masks = segment_from_bbox(bounding_boxes, predictor, samV2)
     cpu_annotations = sam_masks.cpu().numpy()
-    del (sam_masks, bounding_boxes)
+    del (sam_masks)
     import gc
 
     gc.collect()
     torch.cuda.empty_cache()
 
-    return cpu_annotations
+    return cpu_annotations, bounding_boxes
 
 
 def make_label_image_3d(masks):
