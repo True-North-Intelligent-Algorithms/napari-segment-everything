@@ -20,7 +20,6 @@ from skimage.measure import regionprops
 from skimage import color
 import cv2
 import torch
-import os
 
 import toolz as tz
 from napari.utils import progress
@@ -38,8 +37,6 @@ SAM_WEIGHTS_URL = {
     "ObjectAwareModel": "https://drive.google.com/uc?id=1_vb_0SHBUnQhtg5SEE24kOog9_5Qpk5Z/ObjectAwareModel.pt",
     "efficientvit_l2": "https://drive.google.com/uc?id=10Emd1k9obcXZZALiqlW8FLIYZTfLs-xu/l2.pt",
 }
-# gdown.download("https://drive.google.com/uc?id=10Emd1k9obcXZZALiqlW8FLIYZTfLs-xu", output="l2.pt")
-# gdown.download("https://drive.google.com/uc?id=1_vb_0SHBUnQhtg5SEE24kOog9_5Qpk5Z", output="ObjectAwareModel.pt")
 
 
 @tz.curry
@@ -100,6 +97,14 @@ def get_weights_path(model_type: str) -> Optional[Path]:
 
     return weight_path
 
+def get_device():
+    if torch.cuda.is_available():
+        return "cuda"
+    elif torch.backends.mps.is_available():
+        return "mps"
+    else:
+        return "cpu"
+    
 
 def get_sam(model_type: str):
     sam = sam_model_registry[model_type](get_weights_path(model_type))
@@ -123,6 +128,7 @@ def get_sam_automatic_mask_generator(
 ):
 
     sam = sam_model_registry[model_type](get_weights_path(model_type))
+    sam.to(get_device())
     sam_anything_predictor = SamAutomaticMaskGenerator(
         sam,
         points_per_side=int(points_per_side),
