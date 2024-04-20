@@ -86,4 +86,5 @@ venv/
 # spyder config
 *.spyproject
 *.pt
+!src/napari_segment_everything/minimal_detection/PromptGuidedDecoder/Prompt_guided_Mask_Decoder.pt
 *.pth
