@@ -26,6 +26,8 @@ from napari.utils import progress
 
 import numpy as np
 import gdown
+import gc
+
 
 # Some code in this file copied from https://github.com/royerlab/napari-segment-anything/blob/main/src/napari_segment_anything/utils.py
 
@@ -170,10 +172,9 @@ def get_bounding_boxes(
     
     bounding_boxes = obj_results[0].boxes.xyxy.cpu().numpy()
 
-    print(f"Discovered {len(obj_results[0])} objects")
+    print(f"Discovered {len(bounding_boxes)} objects")
     
     return bounding_boxes 
-
 
 def get_mobileSAMv2(image=None, bounding_boxes=None):
     if image is None:
@@ -192,14 +193,12 @@ def get_mobileSAMv2(image=None, bounding_boxes=None):
     predictor = SamPredictorV2(samV2)
     predictor.set_image(image)
     sam_masks = segment_from_bbox(bounding_boxes, predictor, samV2)
-    cpu_annotations = sam_masks.cpu().numpy()
-    del (sam_masks)
-    import gc
+    del bounding_boxes
 
     gc.collect()
     torch.cuda.empty_cache()
 
-    return cpu_annotations
+    return sam_masks
 
 
 def make_label_image_3d(masks):
