@@ -33,6 +33,8 @@ from qtpy.QtWidgets import (
     QGroupBox,
     QSizePolicy,
     QMessageBox,
+    QTextBrowser,
+    QProgressBar,
 )
 
 
@@ -310,6 +312,14 @@ class NapariSegmentEverything(QWidget):
         self.save_project_button.clicked.connect(self.save_project)
         layout.addWidget(self.save_project_button)
 
+        # add status log and progress
+        self.textBrowser_log = QTextBrowser()
+        self.progressBar = QProgressBar()
+
+        layout.addWidget(self.textBrowser_log)
+        layout.addWidget(self.progressBar)
+
+
         self.setLayout(layout)
 
     def change_slider(self, index):
@@ -367,6 +377,9 @@ class NapariSegmentEverything(QWidget):
         box_nms_thresh = self.box_nms_thresh_spinner.spinner.value()
         crop_n_layers = self.crop_n_layers_spinner.spinner.value()
 
+        # add delimiter to log (TODO consider using ***** for delimiter)
+        self.textBrowser_log.append("")
+
         if model_selection == "vit_b":
             self._predictor = get_sam_automatic_mask_generator(
                 model_selection,
@@ -376,31 +389,41 @@ class NapariSegmentEverything(QWidget):
                 box_nms_thresh=box_nms_thresh,
                 crop_n_layers=crop_n_layers,
             )
+            
+            self.textBrowser_log.append("Running SAM automatic mask generator recipe")
+            self.textBrowser_log.append(f"SAM prompt is grid of {points_per_side} by {points_per_side} points")
+            self.progressBar.setValue(30)
 
+            self.textBrowser_log.append("Generating 3D labels with vitb model")
             self.results = self._predictor.generate(self.image)
 
         if model_selection == "mobileSAMv2":
+            self.textBrowser_log.append("Running mobileSAMv2 recipe")
+            self.progressBar.setValue(20)
+            self.textBrowser_log.append("Detecting bounding boxes with YOLO Object Aware Model")
             bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, device='cuda')
+            self.textBrowser_log.append(f"SAM prompt is {len(bounding_boxes)} bounding boxes")
+            self.progressBar.setValue(40)
+            self.textBrowser_log.append("Generating 3D labels with efficientvit_l2 model")
             self.results = get_mobileSAMv2(self.image, bounding_boxes)
             for result, bbox in zip(self.results, bounding_boxes):
-                result["bbox"] = bbox
+                result["prompt_bbox"] = bbox
         self.results = sorted(
             self.results, key=lambda x: x["area"], reverse=False
         )
 
-        print(len(self.results), "objects found")
+        self.textBrowser_log.append(str(len(self.results))+" objects found")
+        self.progressBar.setValue(60)
 
         label_num = 1
         for result in self.results:
             result["keep"] = True
             result["label_num"] = label_num
             label_num += 1
-
-        add_properties_to_label_image(self.image, self.results)
-
+        
+        self.textBrowser_log.append("Adding properties to label image")
+        add_properties_to_label_image(self.image, self.results)        
         label_image = make_label_image_3d(self.results)
-
-        print(label_image.shape)
 
         self.add_points()
         self.add_boxes()
@@ -409,6 +432,9 @@ class NapariSegmentEverything(QWidget):
         self._3D_labels_layer.data = label_image
         self.viewer.dims.ndisplay = 3
         self._3D_labels_layer.translate = (-len(self.results), 0, 0)
+
+        self.textBrowser_log.append("Finished generating 3D labels")
+        self.progressBar.setValue(100)
 
     def update_slider_min_max(self):
 
@@ -634,9 +660,11 @@ class NapariSegmentEverything(QWidget):
     def add_boxes(self):
         # delete old boxes
         self._boxes_layer.data = []
+        self.viewer.dims.ndisplay = 2 
         for result in self.results:
             # if point_coords is a key
-            if "bbox" in result:
-                bbox = result["bbox"]
+            if "prompt_bbox" in result:
+                bbox = result["prompt_bbox"]
                 bbox = [[bbox[1], bbox[0]], [bbox[3], bbox[2]]]
                 self._boxes_layer.add(bbox)
+        self.viewer.dims.ndisplay = 3
