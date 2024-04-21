@@ -99,6 +99,7 @@ def get_weights_path(model_type: str) -> Optional[Path]:
 
     return weight_path
 
+
 def get_device():
     if torch.cuda.is_available():
         return "cuda"
@@ -106,7 +107,7 @@ def get_device():
         return "mps"
     else:
         return "cpu"
-    
+
 
 def get_sam(model_type: str):
     sam = sam_model_registry[model_type](get_weights_path(model_type))
@@ -153,7 +154,31 @@ def get_sam_automatic_mask_generator(
 def get_bounding_boxes(
     image, imgsz=1024, conf=0.4, iou=0.9, device="cpu", max_det=400
 ):
-    
+    """
+    Generates a series of bounding boxes in xyxy-format from an image, using an ObjectAwareModel.
+
+    Parameters
+    ----------
+    image : numpy.ndarray
+        A 2D-image in grayscale or RGB.
+    imgsz : INT, optional
+        Size of the input image. The default is 1024.
+    conf : FLOAT, optional
+        Confidence threshold for the bounding boxes. Lower means more boxes will be detected. The default is 0.4.
+    iou : FLOAT, optional
+        Threshold for how many intersecting bounding boxes should be allowed. Lower means fewer intersecting boxes will be returned. The default is 0.9.
+    device : STR, optional
+        Which device to run on. The default is "cpu".
+    max_det : INT, optional
+        Maximum number of detections that will be returned. The default is 400.
+
+    Returns
+    -------
+    bounding_boxes : numpy.ndarray
+        An array of boxes in xyxy-coordinates.
+
+    """
+
     image_cv2 = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     weights_path_OA = get_weights_path("ObjectAwareModel")
@@ -169,17 +194,37 @@ def get_bounding_boxes(
         iou=iou,
         max_det=max_det,
     )
-    
+
     bounding_boxes = obj_results[0].boxes.xyxy.cpu().numpy()
 
     print(f"Discovered {len(bounding_boxes)} objects")
-    
-    return bounding_boxes 
+
+    return bounding_boxes
+
 
 def get_mobileSAMv2(image=None, bounding_boxes=None):
+    """
+    Uses a SAM model to make predictions from bounding boxes.
+
+    Parameters
+    ----------
+    image : numpy.ndarray, optional
+        A 2D-image in grayscale or RGB. The default is None.
+    bounding_boxes : numpy.ndarray, optional
+        An array of boxes in xyxy-coordinates. The default is None.
+
+    Returns
+    -------
+    sam_masks : LIST
+        A list of results dictionaries, one for each segmentation mask.
+        Each sam_mask has keys for segmentation, area, predicted_iou, and stability_score.
+
+    """
     if image is None:
         print("Upload an image first")
         return
+    if image.ndim < 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # device = "cpu"
     weights_path_VIT = get_weights_path("efficientvit_l2")
