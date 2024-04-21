@@ -383,7 +383,7 @@ class NapariSegmentEverything(QWidget):
             bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, device='cuda')
             self.results = get_mobileSAMv2(self.image, bounding_boxes)
             for result, bbox in zip(self.results, bounding_boxes):
-                result["bbox"] = bbox
+                result["prompt_bbox"] = bbox
         self.results = sorted(
             self.results, key=lambda x: x["area"], reverse=False
         )
@@ -634,9 +634,11 @@ class NapariSegmentEverything(QWidget):
     def add_boxes(self):
         # delete old boxes
         self._boxes_layer.data = []
+        self.viewer.dims.ndisplay = 2 
         for result in self.results:
             # if point_coords is a key
-            if "bbox" in result:
-                bbox = result["bbox"]
+            if "prompt_bbox" in result:
+                bbox = result["prompt_bbox"]
                 bbox = [[bbox[1], bbox[0]], [bbox[3], bbox[2]]]
                 self._boxes_layer.add(bbox)
+        self.viewer.dims.ndisplay = 3
