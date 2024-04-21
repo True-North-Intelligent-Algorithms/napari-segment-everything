@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Apr 14 00:59:58 2024
-
-@author: ian
-"""
-import cv2
 
 from .mobilesamv2 import sam_model_registry, SamPredictor
 from typing import Any, Generator, List
 import torch
 import os
+from segment_anything.utils.amg import calculate_stability_score
+import gc
 
 import sys
 
@@ -78,7 +74,6 @@ def detect_bbox(
         iou=iou,
         max_det=max_det,
     )
-    print(f"Discovered {len(obj_results[0])} objects")
     return obj_results
 
 
@@ -118,7 +113,34 @@ def segment_from_bbox(bounding_boxes, predictor, mobilesamv2):
             low_res_masks = predictor.model.postprocess_masks(
                 low_res_masks, predictor.input_size, predictor.original_size
             )
+            mobilesamv2.threshold_offset = 1
+            stability_score = (
+                calculate_stability_score(
+                    low_res_masks,
+                    mobilesamv2.mask_threshold,
+                    mobilesamv2.threshold_offset,
+                )
+                .cpu()
+                .numpy()
+            )
             sam_mask_pre = (low_res_masks > mobilesamv2.mask_threshold) * 1.0
             sam_mask.append(sam_mask_pre.squeeze(1))
+
     sam_mask = torch.cat(sam_mask)
-    return sam_mask
+    predicted_ious = pred_ious.cpu().numpy()
+    cpu_segmentations = sam_mask.cpu().numpy()
+    del sam_mask
+
+    gc.collect()
+    torch.cuda.empty_cache()
+
+    curr_anns = []
+    for idx in range(len(cpu_segmentations)):
+        ann = {
+            "segmentation": cpu_segmentations[idx],
+            "area": sum(sum(cpu_segmentations[idx])),
+            "predicted_iou": predicted_ious[idx][0],
+            "stability_score": stability_score[idx][0],
+        }
+        curr_anns.append(ann)
+    return curr_anns

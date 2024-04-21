@@ -168,7 +168,7 @@ def build_efficientvit_l2_encoder(checkpoint=None):
             else:
                 continue
         image_encoder.load_state_dict(new_state_dict, strict=True)  # origin
-        print("checkpoint_load_scucess")
+        print("VIT checkpoint loaded successfully")
     return image_encoder
 
 

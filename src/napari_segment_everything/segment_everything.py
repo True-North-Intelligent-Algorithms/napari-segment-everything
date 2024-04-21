@@ -84,8 +84,8 @@ class NapariSegmentEverything(QWidget):
             f"10th percentile intensity: {result['10th_percentile_intensity']:.2f}",
             f"Mean hue: {result['mean_hue']:.2f}",
             f"Mean saturation: {result['mean_saturation']:.2f}",
-            #            f"Predicted IOU: {result['predicted_iou']:.2f}",
-            #            f"Stability score: {result['stability_score']:.2f}",
+            f"Predicted IOU: {result['predicted_iou']:.2f}",
+            f"Stability score: {result['stability_score']:.2f}",
         ]
         stats_text = "\n".join(stats)
 
@@ -380,15 +380,10 @@ class NapariSegmentEverything(QWidget):
             self.results = self._predictor.generate(self.image)
 
         if model_selection == "mobileSAMv2":
-            bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, device = 'cuda')
-            segmentations = get_mobileSAMv2(self.image, bounding_boxes)
-            
-            self.results = list()
-            for seg, bbox in zip(segmentations, bounding_boxes):
-                self.results.append(
-                    {"segmentation": seg, "area": sum(sum(seg)), "bbox": bbox}
-                )
-        
+            bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, device='cuda')
+            self.results = get_mobileSAMv2(self.image, bounding_boxes)
+            for result, bbox in zip(self.results, bounding_boxes):
+                result["bbox"] = bbox
         self.results = sorted(
             self.results, key=lambda x: x["area"], reverse=False
         )
@@ -426,8 +421,8 @@ class NapariSegmentEverything(QWidget):
             "10th_percentile_intensity",
             "mean_hue",
             "mean_saturation",
-            #            "predicted_iou",
-            #            "stability_score",
+            "predicted_iou",
+            "stability_score",
         ]
         for stat in stats:
             min_ = min([result[stat] for result in self.results])
