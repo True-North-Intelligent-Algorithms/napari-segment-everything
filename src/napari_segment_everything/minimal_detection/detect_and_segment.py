@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Apr 14 00:59:58 2024
-
-@author: ian
-"""
 
 from .mobilesamv2 import sam_model_registry, SamPredictor
 from typing import Any, Generator, List
