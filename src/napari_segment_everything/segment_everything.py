@@ -380,14 +380,15 @@ class NapariSegmentEverything(QWidget):
             self.results = self._predictor.generate(self.image)
 
         if model_selection == "mobileSAMv2":
-            #           self.results = get_mobileSAMv2(model_selection)
-            segmentations, bounding_boxes = get_mobileSAMv2(self.image)
+            bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, device = 'cuda')
+            segmentations = get_mobileSAMv2(self.image, bounding_boxes)
+            
             self.results = list()
             for seg, bbox in zip(segmentations, bounding_boxes):
                 self.results.append(
                     {"segmentation": seg, "area": sum(sum(seg)), "bbox": bbox}
                 )
-            # self._predictor =
+        
         self.results = sorted(
             self.results, key=lambda x: x["area"], reverse=False
         )

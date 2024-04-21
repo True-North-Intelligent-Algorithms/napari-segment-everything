@@ -151,42 +151,37 @@ def get_sam_automatic_mask_generator(
 def get_bounding_boxes(
     image, imgsz=1024, conf=0.4, iou=0.9, device="cpu", max_det=400
 ):
+    
+    image_cv2 = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
     weights_path_OA = get_weights_path("ObjectAwareModel")
     objAwareModel = create_OA_model(weights_path_OA)
 
     """Uses an object-aware model (YOLOv8) to determine the bounding boxes of objects"""
     obj_results = detect_bbox(
         objAwareModel,
-        image,
+        image_cv2,
         device=device,
         imgsz=imgsz,
         conf=conf,
         iou=iou,
         max_det=max_det,
     )
+    
+    bounding_boxes = obj_results[0].boxes.xyxy.cpu().numpy()
 
     print(f"Discovered {len(obj_results[0])} objects")
-    return obj_results
+    
+    return bounding_boxes 
 
 
-def get_mobileSAMv2(image=None):
+def get_mobileSAMv2(image=None, bounding_boxes=None):
     if image is None:
         print("Upload an image first")
         return
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # device = "cpu"
     weights_path_VIT = get_weights_path("efficientvit_l2")
-
-    if isinstance(image, str):
-        # For reading from paths
-        im = cv2.imread(image)
-        im = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    else:
-        im = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    obj_results = get_bounding_boxes(image=im, device=device, iou=0.2, conf=0.2)
-    bounding_boxes = obj_results[0].boxes.xyxy.cpu().numpy()
-
     samV2 = create_MS_model()
 
     samV2.image_encoder = sam_model_registry["efficientvit_l2"](
@@ -204,7 +199,7 @@ def get_mobileSAMv2(image=None):
     gc.collect()
     torch.cuda.empty_cache()
 
-    return cpu_annotations, bounding_boxes
+    return cpu_annotations
 
 
 def make_label_image_3d(masks):
