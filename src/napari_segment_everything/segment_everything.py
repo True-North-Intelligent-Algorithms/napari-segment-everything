@@ -75,8 +75,8 @@ class NapariSegmentEverything(QWidget):
             f"10th percentile intensity: {result['10th_percentile_intensity']:.2f}",
             f"Mean hue: {result['mean_hue']:.2f}",
             f"Mean saturation: {result['mean_saturation']:.2f}",
-            #            f"Predicted IOU: {result['predicted_iou']:.2f}",
-            #            f"Stability score: {result['stability_score']:.2f}",
+            f"Predicted IOU: {result['predicted_iou']:.2f}",
+            f"Stability score: {result['stability_score']:.2f}",
         ]
         stats_text = "\n".join(stats)
 
@@ -371,14 +371,7 @@ class NapariSegmentEverything(QWidget):
             self.results = self._predictor.generate(self.image)
 
         if model_selection == "mobileSAMv2":
-            #           self.results = get_mobileSAMv2(model_selection)
-            segmentations = get_mobileSAMv2(self.image)
-            self.results = list()
-            for seg in segmentations:
-                self.results.append(
-                    {"segmentation": seg, "area": sum(sum(seg))}
-                )
-            # self._predictor =
+            self.results = get_mobileSAMv2(self.image)
         self.results = sorted(
             self.results, key=lambda x: x["area"], reverse=False
         )
@@ -413,8 +406,8 @@ class NapariSegmentEverything(QWidget):
             "10th_percentile_intensity",
             "mean_hue",
             "mean_saturation",
-            #            "predicted_iou",
-            #            "stability_score",
+            "predicted_iou",
+            "stability_score",
         ]
         for stat in stats:
             min_ = min([result[stat] for result in self.results])
