@@ -3,6 +3,7 @@ from napari.layers import Image
 import numpy as np
 from skimage import color, util
 from typing import Optional
+
 from napari_segment_everything.widgets import (
     LabeledSpinner,
     LabeledMinMaxSlider,
@@ -35,6 +36,7 @@ from qtpy.QtWidgets import (
     QMessageBox,
     QTextBrowser,
     QProgressBar,
+    QApplication,
 )
 
 
@@ -115,16 +117,16 @@ class NapariSegmentEverything(QWidget):
         self.open_project_button.clicked.connect(self.open_project)
         self.sam_layout.addWidget(self.open_project_button)
 
-        # Dropdown for selecting the model
-        model_label = QLabel(
-            "Select Model"
-        )  # Dropdown for selecting the model
-        self.model_dropdown = QComboBox()
-        self.model_dropdown.addItems(["vit_b", "mobileSAMv2"])
-        model_layout = QHBoxLayout()
-        model_layout.addWidget(model_label)
-        model_layout.addWidget(self.model_dropdown)
-        self.sam_layout.addLayout(model_layout)
+        # Dropdown for selecting the recipe 
+        recipe_label = QLabel(
+            "Select Recipe"
+        )  # Dropdown for selecting the recipe
+        self.recipe_dropdown = QComboBox()
+        self.recipe_dropdown.addItems(["Mobile SAM v2", "Sam Automatic Mask Generator"])
+        recipe_layout = QHBoxLayout()
+        recipe_layout.addWidget(recipe_label)
+        recipe_layout.addWidget(self.recipe_dropdown)
+        self.sam_layout.addLayout(recipe_layout)
 
         # control for selecting the image
         image_layout = QHBoxLayout()
@@ -368,7 +370,7 @@ class NapariSegmentEverything(QWidget):
         if self.image is None:
             return
         
-        model_selection = self.model_dropdown.currentText()
+        recipe_selection = self.recipe_dropdown.currentText()
         points_per_side = self.points_per_side_spinner.spinner.value()
         pred_iou_thresh = self.pred_iou_thresh_spinner.spinner.value()
         stability_score_thresh = self.stability_score_thresh_spinner.spinner.value()
@@ -377,10 +379,11 @@ class NapariSegmentEverything(QWidget):
 
         # add delimiter to log (TODO consider using ***** for delimiter)
         self.textBrowser_log.append("")
+        self.textBrowser_log.append("---------------------------------------")
 
-        if model_selection == "vit_b":
+        if recipe_selection == "Sam Automatic Mask Generator":
             self._predictor = get_sam_automatic_mask_generator(
-                model_selection,
+                "vit_b",
                 points_per_side=points_per_side,
                 pred_iou_thresh=pred_iou_thresh,
                 stability_score_thresh=stability_score_thresh,
@@ -395,10 +398,12 @@ class NapariSegmentEverything(QWidget):
             
             self.results = self._predictor.generate(self.image)
 
-        if model_selection == "mobileSAMv2":
+        elif recipe_selection == "Mobile SAM v2":
             self.textBrowser_log.append("Running mobileSAMv2 recipe")
             self.progressBar.setValue(20)
             self.textBrowser_log.append("Detecting bounding boxes with YOLO Object Aware Model")
+            self.textBrowser_log.repaint()
+            QApplication.processEvents()
             
             bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, iou = 0.95, conf=0.1, device='cuda')
             
