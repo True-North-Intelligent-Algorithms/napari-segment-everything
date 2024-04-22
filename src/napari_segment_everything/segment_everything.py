@@ -405,7 +405,7 @@ class NapariSegmentEverything(QWidget):
             self.textBrowser_log.repaint()
             QApplication.processEvents()
             
-            bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, iou = 0.95, conf=0.1, device='cuda')
+            bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, iou = 0.5, conf=0.01, max_det=10000, device='cuda')
             
             self.textBrowser_log.append(f"SAM prompt is {len(bounding_boxes)} bounding boxes")
             self.progressBar.setValue(40)
