@@ -142,5 +142,7 @@ def segment_from_bbox(bounding_boxes, predictor, mobilesamv2):
             "predicted_iou": predicted_ious[idx][0],
             "stability_score": stability_score[idx][0],
         }
+        if cpu_segmentations[idx].max() < 1: # this means that bboxes won't always == segmentations
+            continue
         curr_anns.append(ann)
     return curr_anns

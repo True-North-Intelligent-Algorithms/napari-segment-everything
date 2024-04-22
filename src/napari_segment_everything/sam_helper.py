@@ -202,6 +202,60 @@ def get_bounding_boxes(
     return bounding_boxes
 
 
+def get_transform(train):
+    from torchvision.transforms.v2 import functional as F
+    from torchvision.transforms import v2 as T
+
+    transforms = []
+    if train:
+        transforms.append(T.RandomHorizontalFlip(0.5))
+    transforms.append(T.ToDtype(torch.float, scale=True))
+    transforms.append(T.ToPureTensor())
+    return T.Compose(transforms)
+
+
+@torch.no_grad()
+def detect_bbox_trained(model, image, device, conf, iou):
+    from torchvision.transforms import ToTensor
+    from torchvision.ops import nms
+
+    convert_tensor = ToTensor()
+    eval_transform = get_transform(train=False)
+    tensor_image = convert_tensor(image)
+    x = eval_transform(tensor_image)
+    # convert RGBA -> RGB and move to device
+    x = x[:3, ...].to(device)
+    predictions = model([x])
+    pred = predictions[0]
+    #    print(pred)
+    idx_after = nms(pred["boxes"], pred["scores"], iou_threshold=iou)
+    pred_boxes = pred["boxes"][idx_after].long()
+    pred_scores = pred["scores"][idx_after]
+    pred_boxes_conf = pred_boxes[pred_scores > conf]
+
+    return pred_boxes_conf
+
+
+def get_bounding_boxes_trained(
+    image,
+    device,
+    model_path="../detectron2/train_boxprompt/ObjectAwareModel_FT.pt",
+    conf=0.5,
+    iou=0.2,
+):
+    from torchvision.models.detection import fasterrcnn_mobilenet_v3_large_fpn
+
+    image_cv2 = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    model = fasterrcnn_mobilenet_v3_large_fpn().to(device)
+    model.load_state_dict(torch.load(model_path))
+    model.eval()
+    bbox = (
+        detect_bbox_trained(model, image_cv2, device, conf, iou).cpu().numpy()
+    )
+    return bbox
+
+
 def get_mobileSAMv2(image=None, bounding_boxes=None):
     """
     Uses a SAM model to make predictions from bounding boxes.

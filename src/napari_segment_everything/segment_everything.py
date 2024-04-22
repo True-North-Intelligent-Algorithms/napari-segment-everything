@@ -16,6 +16,7 @@ from napari_segment_everything.sam_helper import (
 from napari_segment_everything.sam_helper import (
     get_bounding_boxes,
     get_mobileSAMv2,
+    get_bounding_boxes_trained,
 )
 import pickle
 import os
@@ -63,7 +64,7 @@ class NapariSegmentEverything(QWidget):
         )
         self.load_image(self.im_layer_widget.value)
 
-        self._pts_layer = self.viewer.add_points( name = "SAM points")
+        self._pts_layer = self.viewer.add_points(name="SAM points")
 
         self._boxes_layer = self.viewer.add_shapes(
             name="SAM box",
@@ -319,7 +320,6 @@ class NapariSegmentEverything(QWidget):
         layout.addWidget(self.textBrowser_log)
         layout.addWidget(self.progressBar)
 
-
         self.setLayout(layout)
 
     def change_slider(self, index):
@@ -367,11 +367,13 @@ class NapariSegmentEverything(QWidget):
     def process(self):
         if self.image is None:
             return
-        
+
         model_selection = self.model_dropdown.currentText()
         points_per_side = self.points_per_side_spinner.spinner.value()
         pred_iou_thresh = self.pred_iou_thresh_spinner.spinner.value()
-        stability_score_thresh = self.stability_score_thresh_spinner.spinner.value()
+        stability_score_thresh = (
+            self.stability_score_thresh_spinner.spinner.value()
+        )
         box_nms_thresh = self.box_nms_thresh_spinner.spinner.value()
         crop_n_layers = self.crop_n_layers_spinner.spinner.value()
 
@@ -387,35 +389,53 @@ class NapariSegmentEverything(QWidget):
                 box_nms_thresh=box_nms_thresh,
                 crop_n_layers=crop_n_layers,
             )
-            
-            self.textBrowser_log.append("Running SAM automatic mask generator recipe")
-            self.textBrowser_log.append(f"SAM prompt is grid of {points_per_side} by {points_per_side} points")
+
+            self.textBrowser_log.append(
+                "Running SAM automatic mask generator recipe"
+            )
+            self.textBrowser_log.append(
+                f"SAM prompt is grid of {points_per_side} by {points_per_side} points"
+            )
             self.progressBar.setValue(30)
             self.textBrowser_log.append("Generating 3D labels with vitb model")
-            
+
             self.results = self._predictor.generate(self.image)
 
         if model_selection == "mobileSAMv2":
             self.textBrowser_log.append("Running mobileSAMv2 recipe")
             self.progressBar.setValue(20)
-            self.textBrowser_log.append("Detecting bounding boxes with YOLO Object Aware Model")
-            
-            bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, device='cuda')
-            
-            self.textBrowser_log.append(f"SAM prompt is {len(bounding_boxes)} bounding boxes")
+            self.textBrowser_log.append(
+                "Detecting bounding boxes with YOLO Object Aware Model"
+            )
+
+            # bounding_boxes = get_bounding_boxes(
+            #     self.image, imgsz=1024, device="cuda"
+            # )
+
+            bounding_boxes = get_bounding_boxes_trained(
+                self.image,
+                device="cuda",
+                model_path="../detectron2/train_boxprompt/ObjectAwareModel_FT.pt",
+            )
+
+            self.textBrowser_log.append(
+                f"SAM prompt is {len(bounding_boxes)} bounding boxes"
+            )
             self.progressBar.setValue(40)
-            self.textBrowser_log.append("Generating 3D labels with efficientvit_l2 model")
-            
+            self.textBrowser_log.append(
+                "Generating 3D labels with efficientvit_l2 model"
+            )
+
             self.results = get_mobileSAMv2(self.image, bounding_boxes)
-            
+
             for result, bbox in zip(self.results, bounding_boxes):
                 result["prompt_bbox"] = bbox
-        
+
         self.results = sorted(
             self.results, key=lambda x: x["area"], reverse=False
         )
 
-        self.textBrowser_log.append(str(len(self.results))+" objects found")
+        self.textBrowser_log.append(str(len(self.results)) + " objects found")
         self.progressBar.setValue(60)
 
         label_num = 1
@@ -423,9 +443,9 @@ class NapariSegmentEverything(QWidget):
             result["keep"] = True
             result["label_num"] = label_num
             label_num += 1
-        
+
         self.textBrowser_log.append("Adding properties to label image")
-        add_properties_to_label_image(self.image, self.results)        
+        add_properties_to_label_image(self.image, self.results)
         label_image = make_label_image_3d(self.results)
 
         self.add_points()
@@ -634,7 +654,7 @@ class NapariSegmentEverything(QWidget):
         self.min_max_area_slider.max_spinbox.setRange(0, max_area)
         self.min_max_area_slider.min_slider.setRange(0, max_area)
         self.min_max_area_slider.max_slider.setRange(0, max_area)
-        
+
         for i in range(len(self.viewer.layers)):
             if self.viewer.layers[i].name == "SAM box":
                 self.viewer.layers.move(i, -1)
@@ -663,7 +683,7 @@ class NapariSegmentEverything(QWidget):
     def add_boxes(self):
         # delete old boxes
         self._boxes_layer.data = []
-        self.viewer.dims.ndisplay = 2 
+        self.viewer.dims.ndisplay = 2
         for result in self.results:
             # if point_coords is a key
             if "prompt_bbox" in result:
