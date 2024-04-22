@@ -367,13 +367,11 @@ class NapariSegmentEverything(QWidget):
     def process(self):
         if self.image is None:
             return
+        
         model_selection = self.model_dropdown.currentText()
-
         points_per_side = self.points_per_side_spinner.spinner.value()
         pred_iou_thresh = self.pred_iou_thresh_spinner.spinner.value()
-        stability_score_thresh = (
-            self.stability_score_thresh_spinner.spinner.value()
-        )
+        stability_score_thresh = self.stability_score_thresh_spinner.spinner.value()
         box_nms_thresh = self.box_nms_thresh_spinner.spinner.value()
         crop_n_layers = self.crop_n_layers_spinner.spinner.value()
 
@@ -393,21 +391,26 @@ class NapariSegmentEverything(QWidget):
             self.textBrowser_log.append("Running SAM automatic mask generator recipe")
             self.textBrowser_log.append(f"SAM prompt is grid of {points_per_side} by {points_per_side} points")
             self.progressBar.setValue(30)
-
             self.textBrowser_log.append("Generating 3D labels with vitb model")
+            
             self.results = self._predictor.generate(self.image)
 
         if model_selection == "mobileSAMv2":
             self.textBrowser_log.append("Running mobileSAMv2 recipe")
             self.progressBar.setValue(20)
             self.textBrowser_log.append("Detecting bounding boxes with YOLO Object Aware Model")
+            
             bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, device='cuda')
+            
             self.textBrowser_log.append(f"SAM prompt is {len(bounding_boxes)} bounding boxes")
             self.progressBar.setValue(40)
             self.textBrowser_log.append("Generating 3D labels with efficientvit_l2 model")
+            
             self.results = get_mobileSAMv2(self.image, bounding_boxes)
+            
             for result, bbox in zip(self.results, bounding_boxes):
                 result["prompt_bbox"] = bbox
+        
         self.results = sorted(
             self.results, key=lambda x: x["area"], reverse=False
         )
