@@ -87,6 +87,10 @@ def segment_from_bbox(bounding_boxes, predictor, mobilesamv2):
     )  # Does this need to be transformed?
     input_boxes = torch.from_numpy(input_boxes).cuda()
     sam_mask = []
+
+    predicted_ious = []
+    stability_scores = []
+    
     image_embedding = predictor.features
     image_embedding = torch.repeat_interleave(image_embedding, 400, dim=0)
 
@@ -125,9 +129,11 @@ def segment_from_bbox(bounding_boxes, predictor, mobilesamv2):
             )
             sam_mask_pre = (low_res_masks > mobilesamv2.mask_threshold) * 1.0
             sam_mask.append(sam_mask_pre.squeeze(1))
+            predicted_ious.extend(pred_ious.cpu().numpy().flatten().tolist())
+            stability_scores.extend(stability_score.flatten().tolist())
 
     sam_mask = torch.cat(sam_mask)
-    predicted_ious = pred_ious.cpu().numpy()
+    #predicted_ious = pred_ious.cpu().numpy()
     cpu_segmentations = sam_mask.cpu().numpy()
     del sam_mask
 
@@ -139,8 +145,8 @@ def segment_from_bbox(bounding_boxes, predictor, mobilesamv2):
         ann = {
             "segmentation": cpu_segmentations[idx],
             "area": sum(sum(cpu_segmentations[idx])),
-            "predicted_iou": predicted_ious[idx][0],
-            "stability_score": stability_score[idx][0],
+            "predicted_iou": predicted_ious[idx],
+            "stability_score": stability_scores[idx],
         }
         if cpu_segmentations[idx].max() < 1: # this means that bboxes won't always == segmentations
             continue
