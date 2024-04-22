@@ -400,7 +400,7 @@ class NapariSegmentEverything(QWidget):
             self.progressBar.setValue(20)
             self.textBrowser_log.append("Detecting bounding boxes with YOLO Object Aware Model")
             
-            bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, device='cuda')
+            bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, iou = 0.95, conf=0.1, device='cuda')
             
             self.textBrowser_log.append(f"SAM prompt is {len(bounding_boxes)} bounding boxes")
             self.progressBar.setValue(40)
