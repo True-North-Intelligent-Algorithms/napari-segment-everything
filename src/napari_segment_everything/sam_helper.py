@@ -153,17 +153,28 @@ def get_sam_automatic_mask_generator(
     return sam_anything_predictor
 
 
-def get_bounding_boxes(image, detector_model, device="cpu", conf=0.5, iou=0.2):
+def get_bounding_boxes(
+    image,
+    detector_model,
+    device="cpu",
+    conf=0.4,
+    iou=0.5,
+    imgsz=1024,
+    max_det=400,
+):
     if detector_model == "YOLOv8":
         model = YoloDetector(
             str(get_weights_path("ObjectAwareModel")), device="cuda"
+        )
+        bounding_boxes = model.get_bounding_boxes(
+            image, conf=conf, iou=iou, imgsz=imgsz, max_det=max_det
         )
     elif detector_model == "Finetuned":
         model = RcnnDetector(
             str(get_weights_path("ObjectAwareModel_Cell_FT")),
             device="cuda",
         )
-    bounding_boxes = model.get_bounding_boxes(image, conf=conf, iou=iou)
+        bounding_boxes = model.get_bounding_boxes(image, conf=conf, iou=iou)
     print(bounding_boxes)
     return bounding_boxes
 

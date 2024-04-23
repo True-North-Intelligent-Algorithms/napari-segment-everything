@@ -10,7 +10,14 @@ def test_mobile_sam():
     # load a color examp
     image = data.coffee()
 
-    bounding_boxes = get_bounding_boxes(image, imgsz=1024, device="cuda")
+    bounding_boxes = get_bounding_boxes(
+        image,
+        detector_model="YOLOv8",
+        imgsz=1024,
+        device="cuda",
+        conf=0.4,
+        iou=0.9,
+    )
     segmentations = get_mobileSAMv2(image, bounding_boxes)
 
     assert len(segmentations) == 11
@@ -27,5 +34,5 @@ def test_bbox():
     return segmentations
 
 
-seg = test_bbox()
-# seg, regions=test_mobile_sam()
+# seg = test_bbox()
+seg = test_mobile_sam()
