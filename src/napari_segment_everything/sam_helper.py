@@ -1,9 +1,7 @@
 from segment_anything import SamPredictor
 from segment_anything.automatic_mask_generator import SamAutomaticMaskGenerator
 from napari_segment_everything.minimal_detection.detect_and_segment import (
-    create_OA_model,
     create_MS_model,
-    detect_bbox,
     segment_from_bbox,
 )
 from napari_segment_everything.minimal_detection.mobilesamv2 import (
@@ -11,16 +9,19 @@ from napari_segment_everything.minimal_detection.mobilesamv2 import (
     SamPredictor as SamPredictorV2,
 )
 
+from napari_segment_everything.minimal_detection.prompt_generator import (
+    RcnnDetector,
+    YoloDetector,
+)
+
 import urllib.request
 import warnings
 from pathlib import Path
 from typing import Optional
-from skimage.measure import label
-from skimage.measure import regionprops
+from skimage.measure import regionprops, label
 from skimage import color
 import cv2
 import torch
-
 import toolz as tz
 from napari.utils import progress
 
@@ -37,6 +38,7 @@ SAM_WEIGHTS_URL = {
     "vit_l": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
     "vit_b": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
     "ObjectAwareModel": "https://drive.google.com/uc?id=1_vb_0SHBUnQhtg5SEE24kOog9_5Qpk5Z/ObjectAwareModel.pt",
+    "ObjectAwareModel_Cell_FT": "https://drive.google.com/uc?id=1efZ40ti87O346dJW5lp7inCZ84N_nugS/ObjectAwareModel_Cell_FT.pt",
     "efficientvit_l2": "https://drive.google.com/uc?id=10Emd1k9obcXZZALiqlW8FLIYZTfLs-xu/l2.pt",
 }
 
@@ -99,6 +101,7 @@ def get_weights_path(model_type: str) -> Optional[Path]:
 
     return weight_path
 
+
 def get_device():
     if torch.cuda.is_available():
         return "cuda"
@@ -106,7 +109,7 @@ def get_device():
         return "mps"
     else:
         return "cpu"
-    
+
 
 def get_sam(model_type: str):
     sam = sam_model_registry[model_type](get_weights_path(model_type))
@@ -151,35 +154,54 @@ def get_sam_automatic_mask_generator(
 
 
 def get_bounding_boxes(
-    image, imgsz=1024, conf=0.4, iou=0.9, device="cpu", max_det=400
+    image,
+    detector_model,
+    device="cpu",
+    conf=0.4,
+    iou=0.5,
+    imgsz=1024,
+    max_det=400,
 ):
-    
-    image_cv2 = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    if detector_model == "YOLOv8":
+        model = YoloDetector(
+            str(get_weights_path("ObjectAwareModel")), device="cuda"
+        )
+        bounding_boxes = model.get_bounding_boxes(
+            image, conf=conf, iou=iou, imgsz=imgsz, max_det=max_det
+        )
+    elif detector_model == "Finetuned":
+        model = RcnnDetector(
+            str(get_weights_path("ObjectAwareModel_Cell_FT")),
+            device="cuda",
+        )
+        bounding_boxes = model.get_bounding_boxes(image, conf=conf, iou=iou)
+    print(bounding_boxes)
+    return bounding_boxes
 
-    weights_path_OA = get_weights_path("ObjectAwareModel")
-    objAwareModel = create_OA_model(weights_path_OA)
-
-    """Uses an object-aware model (YOLOv8) to determine the bounding boxes of objects"""
-    obj_results = detect_bbox(
-        objAwareModel,
-        image_cv2,
-        device=device,
-        imgsz=imgsz,
-        conf=conf,
-        iou=iou,
-        max_det=max_det,
-    )
-    
-    bounding_boxes = obj_results[0].boxes.xyxy.cpu().numpy()
-
-    print(f"Discovered {len(bounding_boxes)} objects")
-    
-    return bounding_boxes 
 
 def get_mobileSAMv2(image=None, bounding_boxes=None):
+    """
+    Uses a SAM model to make predictions from bounding boxes.
+
+    Parameters
+    ----------
+    image : numpy.ndarray, optional
+        A 2D-image in grayscale or RGB. The default is None.
+    bounding_boxes : numpy.ndarray, optional
+        An array of boxes in xyxy-coordinates. The default is None.
+
+    Returns
+    -------
+    sam_masks : LIST
+        A list of results dictionaries, one for each segmentation mask.
+        Each sam_mask has keys for segmentation, area, predicted_iou, and stability_score.
+
+    """
     if image is None:
         print("Upload an image first")
         return
+    if image.ndim < 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # device = "cpu"
     weights_path_VIT = get_weights_path("efficientvit_l2")
