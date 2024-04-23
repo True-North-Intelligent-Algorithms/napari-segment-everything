@@ -422,6 +422,8 @@ class NapariSegmentEverything(QWidget):
                 self.image,
                 detector_model="Finetuned",
                 device="cuda",
+                conf=0.4,
+                iou=0.5,
             )
             self.textBrowser_log.append(
                 f"SAM prompt is {len(bounding_boxes)} bounding boxes"
@@ -450,6 +452,8 @@ class NapariSegmentEverything(QWidget):
                 self.image,
                 detector_model="YOLOv8",
                 device="cuda",
+                conf=0.4,
+                iou=0.5,
             )
 
             self.textBrowser_log.append(

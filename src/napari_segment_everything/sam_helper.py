@@ -1,9 +1,7 @@
 from segment_anything import SamPredictor
 from segment_anything.automatic_mask_generator import SamAutomaticMaskGenerator
 from napari_segment_everything.minimal_detection.detect_and_segment import (
-    create_OA_model,
     create_MS_model,
-    detect_bbox,
     segment_from_bbox,
 )
 from napari_segment_everything.minimal_detection.mobilesamv2 import (
@@ -155,16 +153,17 @@ def get_sam_automatic_mask_generator(
     return sam_anything_predictor
 
 
-def get_bounding_boxes(image, detector_model, device="cpu"):
+def get_bounding_boxes(image, detector_model, device="cpu", conf=0.5, iou=0.2):
     if detector_model == "YOLOv8":
         model = YoloDetector(
             str(get_weights_path("ObjectAwareModel")), device="cuda"
         )
     elif detector_model == "Finetuned":
         model = RcnnDetector(
-            str(get_weights_path("ObjectAwareModel_Cell_FT")), device="cuda"
+            str(get_weights_path("ObjectAwareModel_Cell_FT")),
+            device="cuda",
         )
-    bounding_boxes = model.get_bounding_boxes(image)
+    bounding_boxes = model.get_bounding_boxes(image, conf=conf, iou=iou)
     print(bounding_boxes)
     return bounding_boxes
 
