@@ -5,8 +5,6 @@ from napari_segment_everything.sam_helper import (
     get_bounding_boxes,
     get_bounding_boxes_trained,
 )
-import numpy as np
-from skimage.measure import regionprops
 
 
 def test_mobile_sam():
@@ -15,9 +13,6 @@ def test_mobile_sam():
 
     bounding_boxes = get_bounding_boxes(image, imgsz=1024, device="cuda")
     segmentations = get_mobileSAMv2(image, bounding_boxes)
-    for seg in segmentations:
-        coords = np.where(seg)
-        regions = regionprops(seg["segmentation"].astype("uint8"))
 
     assert len(segmentations) == 11
 
