@@ -8,23 +8,7 @@ import os
 from segment_anything.utils.amg import calculate_stability_score
 import gc
 
-import sys
-
-"""
-This is necessary because the torch weights were 
-pickled with its environment, which messed up the imports
-"""
-
 current_dir = os.path.dirname(__file__)
-obj_detect_dir = os.path.join(current_dir, "object_detection")
-sys.path.insert(0, obj_detect_dir)
-
-from .object_detection.ultralytics.prompt_mobilesamv2 import ObjectAwareModel
-
-
-def create_OA_model(weights_path):
-    object_aware_model = ObjectAwareModel(weights_path)
-    return object_aware_model
 
 
 def create_MS_model():
@@ -51,32 +35,6 @@ def batch_iterator(batch_size: int, *args) -> Generator[List[Any], None, None]:
         yield [arg[b * batch_size : (b + 1) * batch_size] for arg in args]
 
 
-def detect_bbox(
-    object_aware_model,
-    image,
-    imgsz=1024,
-    conf=0.4,
-    iou=0.9,
-    device="cpu",
-    max_det=300,
-):
-    """
-    Uses an object aware model to produce bounding boxes for a given image at image_path.
-
-    Returns a list of bounding boxes, as well as extra properties.
-    """
-    obj_results = object_aware_model(
-        image,
-        device=device,
-        retina_masks=True,
-        imgsz=imgsz,
-        conf=conf,
-        iou=iou,
-        max_det=max_det,
-    )
-    return obj_results
-
-
 def segment_from_bbox(bounding_boxes, predictor, mobilesamv2):
     """
     Segments everything given the bounding boxes of the objects and the mobileSAMv2 prediction model.
@@ -90,7 +48,7 @@ def segment_from_bbox(bounding_boxes, predictor, mobilesamv2):
 
     predicted_ious = []
     stability_scores = []
-    
+
     image_embedding = predictor.features
     image_embedding = torch.repeat_interleave(image_embedding, 400, dim=0)
 
@@ -133,7 +91,7 @@ def segment_from_bbox(bounding_boxes, predictor, mobilesamv2):
             stability_scores.extend(stability_score.flatten().tolist())
 
     sam_mask = torch.cat(sam_mask)
-    #predicted_ious = pred_ious.cpu().numpy()
+    # predicted_ious = pred_ious.cpu().numpy()
     cpu_segmentations = sam_mask.cpu().numpy()
     del sam_mask
 
@@ -148,7 +106,9 @@ def segment_from_bbox(bounding_boxes, predictor, mobilesamv2):
             "predicted_iou": predicted_ious[idx],
             "stability_score": stability_scores[idx],
         }
-        if cpu_segmentations[idx].max() < 1: # this means that bboxes won't always == segmentations
+        if (
+            cpu_segmentations[idx].max() < 1
+        ):  # this means that bboxes won't always == segmentations
             continue
         curr_anns.append(ann)
     return curr_anns

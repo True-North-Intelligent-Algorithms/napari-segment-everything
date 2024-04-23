@@ -17,7 +17,6 @@ from napari_segment_everything.sam_helper import (
 from napari_segment_everything.sam_helper import (
     get_bounding_boxes,
     get_mobileSAMv2,
-    get_bounding_boxes_trained,
 )
 import pickle
 import os
@@ -118,12 +117,18 @@ class NapariSegmentEverything(QWidget):
         self.open_project_button.clicked.connect(self.open_project)
         self.sam_layout.addWidget(self.open_project_button)
 
-        # Dropdown for selecting the recipe 
+        # Dropdown for selecting the recipe
         recipe_label = QLabel(
             "Select Recipe"
         )  # Dropdown for selecting the recipe
         self.recipe_dropdown = QComboBox()
-        self.recipe_dropdown.addItems(["Mobile SAM v2", "Sam Automatic Mask Generator"])
+        self.recipe_dropdown.addItems(
+            [
+                "Mobile SAM v2",
+                "Mobile SAM Finetuned",
+                "Sam Automatic Mask Generator",
+            ]
+        )
         recipe_layout = QHBoxLayout()
         recipe_layout.addWidget(recipe_label)
         recipe_layout.addWidget(self.recipe_dropdown)
@@ -404,17 +409,52 @@ class NapariSegmentEverything(QWidget):
 
             self.results = self._predictor.generate(self.image)
 
+        elif recipe_selection == "Mobile SAM Finetuned":
+            self.textBrowser_log.append("Running finetuned mobileSAMv2 recipe")
+            self.progressBar.setValue(20)
+            self.textBrowser_log.append(
+                "Detecting bounding boxes with FasterRCNN Object Aware Model"
+            )
+            self.textBrowser_log.repaint()
+            QApplication.processEvents()
+
+            bounding_boxes = get_bounding_boxes(
+                self.image,
+                detector_model="Finetuned",
+                device="cuda",
+            )
+            self.textBrowser_log.append(
+                f"SAM prompt is {len(bounding_boxes)} bounding boxes"
+            )
+            self.progressBar.setValue(40)
+            self.textBrowser_log.append(
+                "Generating 3D labels with efficientvit_l2 model"
+            )
+
+            self.results = get_mobileSAMv2(self.image, bounding_boxes)
+
+            for result, bbox in zip(self.results, bounding_boxes):
+                result["prompt_bbox"] = bbox
+
         elif recipe_selection == "Mobile SAM v2":
             self.textBrowser_log.append("Running mobileSAMv2 recipe")
             self.progressBar.setValue(20)
-            
-            self.textBrowser_log.append("Detecting bounding boxes with YOLO Object Aware Model")
+
+            self.textBrowser_log.append(
+                "Detecting bounding boxes with YOLO Object Aware Model"
+            )
             self.textBrowser_log.repaint()
             QApplication.processEvents()
-            
-            bounding_boxes = get_bounding_boxes(self.image, imgsz=1024, iou = 0.5, conf=0.01, max_det=10000, device='cuda')
-            
-            self.textBrowser_log.append(f"SAM prompt is {len(bounding_boxes)} bounding boxes")
+
+            bounding_boxes = get_bounding_boxes(
+                self.image,
+                detector_model="YOLOv8",
+                device="cuda",
+            )
+
+            self.textBrowser_log.append(
+                f"SAM prompt is {len(bounding_boxes)} bounding boxes"
+            )
             self.progressBar.setValue(40)
             self.textBrowser_log.append(
                 "Generating 3D labels with efficientvit_l2 model"

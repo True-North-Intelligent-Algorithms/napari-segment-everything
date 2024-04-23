@@ -11,16 +11,19 @@ from napari_segment_everything.minimal_detection.mobilesamv2 import (
     SamPredictor as SamPredictorV2,
 )
 
+from napari_segment_everything.minimal_detection.prompt_generator import (
+    RcnnDetector,
+    YoloDetector,
+)
+
 import urllib.request
 import warnings
 from pathlib import Path
 from typing import Optional
-from skimage.measure import label
-from skimage.measure import regionprops
+from skimage.measure import regionprops, label
 from skimage import color
 import cv2
 import torch
-
 import toolz as tz
 from napari.utils import progress
 
@@ -37,6 +40,7 @@ SAM_WEIGHTS_URL = {
     "vit_l": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
     "vit_b": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
     "ObjectAwareModel": "https://drive.google.com/uc?id=1_vb_0SHBUnQhtg5SEE24kOog9_5Qpk5Z/ObjectAwareModel.pt",
+    "ObjectAwareModel_Cell_FT": "https://drive.google.com/uc?id=1efZ40ti87O346dJW5lp7inCZ84N_nugS/ObjectAwareModel_Cell_FT.pt",
     "efficientvit_l2": "https://drive.google.com/uc?id=10Emd1k9obcXZZALiqlW8FLIYZTfLs-xu/l2.pt",
 }
 
@@ -151,109 +155,18 @@ def get_sam_automatic_mask_generator(
     return sam_anything_predictor
 
 
-def get_bounding_boxes(
-    image, imgsz=1024, conf=0.4, iou=0.9, device="cpu", max_det=400
-):
-    """
-    Generates a series of bounding boxes in xyxy-format from an image, using an ObjectAwareModel.
-
-    Parameters
-    ----------
-    image : numpy.ndarray
-        A 2D-image in grayscale or RGB.
-    imgsz : INT, optional
-        Size of the input image. The default is 1024.
-    conf : FLOAT, optional
-        Confidence threshold for the bounding boxes. Lower means more boxes will be detected. The default is 0.4.
-    iou : FLOAT, optional
-        Threshold for how many intersecting bounding boxes should be allowed. Lower means fewer intersecting boxes will be returned. The default is 0.9.
-    device : STR, optional
-        Which device to run on. The default is "cpu".
-    max_det : INT, optional
-        Maximum number of detections that will be returned. The default is 400.
-
-    Returns
-    -------
-    bounding_boxes : numpy.ndarray
-        An array of boxes in xyxy-coordinates.
-
-    """
-
-    image_cv2 = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    weights_path_OA = get_weights_path("ObjectAwareModel")
-    objAwareModel = create_OA_model(weights_path_OA)
-
-    """Uses an object-aware model (YOLOv8) to determine the bounding boxes of objects"""
-    obj_results = detect_bbox(
-        objAwareModel,
-        image_cv2,
-        device=device,
-        imgsz=imgsz,
-        conf=conf,
-        iou=iou,
-        max_det=max_det,
-    )
-
-    bounding_boxes = obj_results[0].boxes.xyxy.cpu().numpy()
-
-    print(f"Discovered {len(bounding_boxes)} objects")
-
+def get_bounding_boxes(image, detector_model, device="cpu"):
+    if detector_model == "YOLOv8":
+        model = YoloDetector(
+            str(get_weights_path("ObjectAwareModel")), device="cuda"
+        )
+    elif detector_model == "Finetuned":
+        model = RcnnDetector(
+            str(get_weights_path("ObjectAwareModel_Cell_FT")), device="cuda"
+        )
+    bounding_boxes = model.get_bounding_boxes(image)
+    print(bounding_boxes)
     return bounding_boxes
-
-
-def get_transform(train):
-    from torchvision.transforms.v2 import functional as F
-    from torchvision.transforms import v2 as T
-
-    transforms = []
-    if train:
-        transforms.append(T.RandomHorizontalFlip(0.5))
-    transforms.append(T.ToDtype(torch.float, scale=True))
-    transforms.append(T.ToPureTensor())
-    return T.Compose(transforms)
-
-
-@torch.no_grad()
-def detect_bbox_trained(model, image, device, conf, iou):
-    from torchvision.transforms import ToTensor
-    from torchvision.ops import nms
-
-    convert_tensor = ToTensor()
-    eval_transform = get_transform(train=False)
-    tensor_image = convert_tensor(image)
-    x = eval_transform(tensor_image)
-    # convert RGBA -> RGB and move to device
-    x = x[:3, ...].to(device)
-    predictions = model([x])
-    pred = predictions[0]
-    #    print(pred)
-    idx_after = nms(pred["boxes"], pred["scores"], iou_threshold=iou)
-    pred_boxes = pred["boxes"][idx_after].long()
-    pred_scores = pred["scores"][idx_after]
-    pred_boxes_conf = pred_boxes[pred_scores > conf]
-
-    return pred_boxes_conf
-
-
-def get_bounding_boxes_trained(
-    image,
-    device,
-    model_path="../detectron2/train_boxprompt/ObjectAwareModel_FT.pt",
-    conf=0.5,
-    iou=0.2,
-):
-    from torchvision.models.detection import fasterrcnn_mobilenet_v3_large_fpn
-
-    image_cv2 = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    model = fasterrcnn_mobilenet_v3_large_fpn().to(device)
-    model.load_state_dict(torch.load(model_path))
-    model.eval()
-    bbox = (
-        detect_bbox_trained(model, image_cv2, device, conf, iou).cpu().numpy()
-    )
-    return bbox
 
 
 def get_mobileSAMv2(image=None, bounding_boxes=None):
