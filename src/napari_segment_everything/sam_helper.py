@@ -160,7 +160,7 @@ def get_bounding_boxes(
     conf=0.4,
     iou=0.5,
     imgsz=1024,
-    max_det=400,
+    max_det=10000,
 ):
     if detector_model == "YOLOv8":
         model = YoloDetector(
