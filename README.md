@@ -25,8 +25,9 @@ https://github.com/True-North-Intelligent-Algorithms/napari-segment-everything/a
 
 ## Instructions
 
-### 0. This implementation
-Right now, this model can be downloaded as-is from the Github and installed using `pip install -e .`
+### 0. Select recipe (implementation)
+
+Use the 'select recipe' combo box to choose the implementation.   Currently 'Mobile SAM v2', 'Mobile SAM finetuned' and 'SAM Automatic Mask Generator' are available.  Not that the sub-options will change slightly depending on which recipe you choose.  'Mobile SAM v2' and 'Mobile SAM finetuned' (finetuned using Cellpose training data) first use a bounding box detector to locate objects then feed the bounding boxes to SAM.  'SAM Automatic Mask Generator' uses a grid of points as the prompt for SAM.  Our experiments indicate that the 'Mobile SAM' recipes work well in most cases.  'SAM Automatic Mask Generator' may be useful for cases where bounding box detection was sub-optimal.  
 
 ### 1. Generate 3D labels
 
