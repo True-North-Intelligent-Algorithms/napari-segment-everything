@@ -19,7 +19,6 @@ from napari_segment_everything.sam_helper import (
     get_mobileSAMv2,
 )
 import pickle
-import os
 
 # qypt improts
 from qtpy.QtWidgets import (
@@ -36,7 +35,7 @@ from qtpy.QtWidgets import (
     QMessageBox,
     QTextBrowser,
     QProgressBar,
-    QApplication,
+    QApplication
 )
 
 
@@ -129,6 +128,15 @@ class NapariSegmentEverything(QWidget):
                 "Sam Automatic Mask Generator",
             ]
         )
+
+        def on_index_changed(index):
+            if index == 0 or index == 1:
+                self.stacked_algorithm_params_layout.setCurrentIndex(0)
+            else:
+                self.stacked_algorithm_params_layout.setCurrentIndex(1)
+
+        self.recipe_dropdown.currentIndexChanged.connect(on_index_changed)
+
         recipe_layout = QHBoxLayout()
         recipe_layout.addWidget(recipe_label)
         recipe_layout.addWidget(self.recipe_dropdown)
@@ -151,6 +159,34 @@ class NapariSegmentEverything(QWidget):
             self.im_layer_widget.reset_choices
         )
 
+        self.stacked_algorithm_params_layout = QStackedWidget()
+
+
+        self.bbox_conf_spinner = LabeledSpinner(
+            "Bounding Box Confidence", 0, 1, 0.1, None, is_double=True
+        )
+
+        self.bbox_iou_spinner = LabeledSpinner(
+            "Bounding Box IOU", 0, 1, 0.9, None, is_double=True
+        )
+
+        self.bbox_imgsz_spinner = LabeledSpinner(
+            "Bounding Box Image Size", 0, 10000, 1024, None
+        )
+
+        self.bbbox_max_det_spinner = LabeledSpinner(
+            "Bounding Box Max Detection", 0, 30000, 10000, None
+        )
+
+        self.yolo_params_layout = QVBoxLayout()
+        self.widgetGroup1 = QWidget()
+        self.yolo_params_layout.addWidget(self.bbox_conf_spinner)
+        self.yolo_params_layout.addWidget(self.bbox_iou_spinner)
+        self.yolo_params_layout.addWidget(self.bbox_imgsz_spinner)
+        self.yolo_params_layout.addWidget(self.bbbox_max_det_spinner)
+        self.widgetGroup1.setLayout(self.yolo_params_layout)
+
+
         self.points_per_side_spinner = LabeledSpinner(
             "Points per side", 4, 100, 32, None
         )
@@ -167,12 +203,19 @@ class NapariSegmentEverything(QWidget):
             "Crop N Layers", 0, 10, 0, None
         )
 
-        self.sam_layout.addWidget(self.points_per_side_spinner)
-        self.sam_layout.addWidget(self.pred_iou_thresh_spinner)
-        self.sam_layout.addWidget(self.stability_score_thresh_spinner)
-        self.sam_layout.addWidget(self.box_nms_thresh_spinner)
-        self.sam_layout.addWidget(self.crop_n_layers_spinner)
+        self.sam_params_layout = QVBoxLayout()
+        self.widgetGroup2 = QWidget()
+        self.sam_params_layout.addWidget(self.points_per_side_spinner)
+        self.sam_params_layout.addWidget(self.pred_iou_thresh_spinner)
+        self.sam_params_layout.addWidget(self.stability_score_thresh_spinner)
+        self.sam_params_layout.addWidget(self.box_nms_thresh_spinner)
+        self.sam_params_layout.addWidget(self.crop_n_layers_spinner)
+        self.widgetGroup2.setLayout(self.sam_params_layout)
 
+        self.stacked_algorithm_params_layout.addWidget(self.widgetGroup1)
+        self.stacked_algorithm_params_layout.addWidget(self.widgetGroup2)
+
+        self.sam_layout.addWidget(self.stacked_algorithm_params_layout)
         # add process button
         self.process_button = QPushButton("Generate 3D labels")
         self.process_button.clicked.connect(self.process)
@@ -280,17 +323,17 @@ class NapariSegmentEverything(QWidget):
         )
         self.combo_box.currentIndexChanged.connect(self.change_slider)
 
-        self.stacked_widget = QStackedWidget()
+        self.stacked_slider_widget = QStackedWidget()
         for slider in self.sliders:
-            self.stacked_widget.addWidget(slider)
+            self.stacked_slider_widget.addWidget(slider)
 
         select_slider_layout = QHBoxLayout()
         select_slider_layout.addWidget(QLabel("Select Stat:"))
         select_slider_layout.addWidget(self.combo_box)
         self.filter_layout.addLayout(select_slider_layout)
-        self.stacked_widget.setFixedHeight(100)
+        self.stacked_slider_widget.setFixedHeight(100)
         self.filter_results_group.setFixedHeight(160)
-        self.filter_layout.addWidget(self.stacked_widget)
+        self.filter_layout.addWidget(self.stacked_slider_widget)
 
         layout.addWidget(self.filter_results_group)
 
@@ -330,7 +373,7 @@ class NapariSegmentEverything(QWidget):
         self.setLayout(layout)
 
     def change_slider(self, index):
-        self.stacked_widget.setCurrentIndex(index)
+        self.stacked_slider_widget.setCurrentIndex(index)
 
     def open_project(self):
         options = QFileDialog.Options()
@@ -384,6 +427,11 @@ class NapariSegmentEverything(QWidget):
         box_nms_thresh = self.box_nms_thresh_spinner.spinner.value()
         crop_n_layers = self.crop_n_layers_spinner.spinner.value()
 
+        bbox_iou = self.bbox_iou_spinner.spinner.value()
+        bbox_conf = self.bbox_conf_spinner.spinner.value()
+        bbox_imgsz = self.bbox_imgsz_spinner.spinner.value()
+        bbox_max_det = self.bbbox_max_det_spinner.spinner.value()
+
         # add delimiter to log (TODO consider using ***** for delimiter)
         self.textBrowser_log.append("")
         self.textBrowser_log.append("---------------------------------------")
@@ -422,8 +470,8 @@ class NapariSegmentEverything(QWidget):
                 self.image,
                 detector_model="Finetuned",
                 device="cuda",
-                conf=0.4,
-                iou=0.5,
+                conf=bbox_conf,
+                iou=bbox_iou,
             )
             self.textBrowser_log.append(
                 f"SAM prompt is {len(bounding_boxes)} bounding boxes"
@@ -452,8 +500,10 @@ class NapariSegmentEverything(QWidget):
                 self.image,
                 detector_model="YOLOv8",
                 device="cuda",
-                conf=0.4,
-                iou=0.5,
+                conf=bbox_conf,
+                iou=bbox_iou,
+                imgsz=bbox_imgsz,
+                max_det=bbox_max_det,
             )
 
             self.textBrowser_log.append(
@@ -463,6 +513,8 @@ class NapariSegmentEverything(QWidget):
             self.textBrowser_log.append(
                 "Generating 3D labels with efficientvit_l2 model"
             )
+            self.textBrowser_log.repaint()
+            QApplication.processEvents()
 
             self.results = get_mobileSAMv2(self.image, bounding_boxes)
 
@@ -483,6 +535,8 @@ class NapariSegmentEverything(QWidget):
             label_num += 1
 
         self.textBrowser_log.append("Adding properties to label image")
+        self.textBrowser_log.repaint()
+        QApplication.processEvents()
         add_properties_to_label_image(self.image, self.results)
         label_image = make_label_image_3d(self.results)
 
@@ -722,10 +776,12 @@ class NapariSegmentEverything(QWidget):
         # delete old boxes
         self._boxes_layer.data = []
         self.viewer.dims.ndisplay = 2
+        boxes = []
         for result in self.results:
             # if point_coords is a key
             if "prompt_bbox" in result:
                 bbox = result["prompt_bbox"]
                 bbox = [[bbox[1], bbox[0]], [bbox[3], bbox[2]]]
-                self._boxes_layer.add(bbox)
+                boxes.append(bbox)
+        self._boxes_layer.add(boxes)
         self.viewer.dims.ndisplay = 3
