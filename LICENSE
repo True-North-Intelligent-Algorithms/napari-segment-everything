@@ -7,6 +7,7 @@ This work re-uses some code from the following sources:
 - napari-segment-anything (License: https://github.com/royerlab/napari-segment-anything/blob/main/LICENSE)  
 - MobileSAMv2 (License: https://github.com/ChaoningZhang/MobileSAM/blob/master/LICENSE)
 
+Additionally, training data is from Cellpose's annotated dataset, which is licensed CC-by-NC (see: https://github.com/MouseLand/cellpose?tab=readme-ov-file)
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
