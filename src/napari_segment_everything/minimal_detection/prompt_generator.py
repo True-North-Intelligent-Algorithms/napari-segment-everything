@@ -7,6 +7,7 @@ Created on Mon Apr 22 23:58:14 2024
 """
 import cv2
 import os, sys
+from skimage.transform import resize
 from torchvision.models.detection import fasterrcnn_mobilenet_v3_large_fpn
 from torchvision.transforms import ToTensor
 from torchvision.ops import nms
@@ -110,7 +111,9 @@ class RcnnDetector(BaseDetector):
         super().__init__(model_path, trainable)
         self.model_type = "FasterRCNN"
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = fasterrcnn_mobilenet_v3_large_fpn().to(device)
+        self.model = fasterrcnn_mobilenet_v3_large_fpn(
+            box_detections_per_img=500,
+        ).to(device)
         self.model.load_state_dict(torch.load(model_path))
 
     def train(self, training_data):

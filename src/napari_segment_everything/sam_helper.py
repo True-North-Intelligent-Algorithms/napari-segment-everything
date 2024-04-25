@@ -160,7 +160,7 @@ def get_bounding_boxes(
     conf=0.4,
     iou=0.5,
     imgsz=1024,
-    max_det=400,
+    max_det=2000,
 ):
     if detector_model == "YOLOv8":
         model = YoloDetector(
@@ -171,8 +171,7 @@ def get_bounding_boxes(
         )
     elif detector_model == "Finetuned":
         model = RcnnDetector(
-            str(get_weights_path("ObjectAwareModel_Cell_FT")),
-            device="cuda",
+            str(get_weights_path("ObjectAwareModel_Cell_FT")), device="cuda"
         )
         bounding_boxes = model.get_bounding_boxes(image, conf=conf, iou=iou)
     print(bounding_boxes)
