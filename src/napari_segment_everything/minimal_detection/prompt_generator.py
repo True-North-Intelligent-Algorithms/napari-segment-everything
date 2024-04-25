@@ -110,7 +110,7 @@ class RcnnDetector(BaseDetector):
     def __init__(self, model_path, device, trainable=True):
         super().__init__(model_path, trainable)
         self.model_type = "FasterRCNN"
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = device
         self.model = fasterrcnn_mobilenet_v3_large_fpn(
             box_detections_per_img=500,
         ).to(device)
