@@ -98,6 +98,9 @@ def test_YOLO():
 
 
 def test_weights_path():
+    """
+    Tests whether the weights directory existing on the operating system
+    """
     weights_path = get_weights_path("default")
     assert os.path.exists(os.path.dirname(weights_path))
 
@@ -147,6 +150,7 @@ def test_labels():
     assert len(props_yolo) == 10
     props_vit_b = segmentations_vit_b[0].keys()
     assert len(props_vit_b) == 13
+
 
 test_urls()
 test_bbox()

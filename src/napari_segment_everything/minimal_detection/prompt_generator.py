@@ -7,7 +7,6 @@ Created on Mon Apr 22 23:58:14 2024
 """
 import cv2
 import os, sys
-from skimage.transform import resize
 from torchvision.models.detection import fasterrcnn_mobilenet_v3_large_fpn
 from torchvision.transforms import ToTensor
 from torchvision.ops import nms
