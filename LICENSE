@@ -2,9 +2,11 @@
 Copyright (c) 2024, Brian Northan
 All rights reserved.
 
-This work re-uses some code from  napari sam (see license here https://github.com/MIC-DKFZ/napari-sam/blob/main/LICENSE)
+This work re-uses some code from the following sources:
+- napari sam (License: https://github.com/MIC-DKFZ/napari-sam/blob/main/LICENSE)
+- napari-segment-anything (License: https://github.com/royerlab/napari-segment-anything/blob/main/LICENSE)  
+- MobileSAMv2 (License: https://github.com/ChaoningZhang/MobileSAM/blob/master/LICENSE)
 
-And also re-uses some code from  napari-segment-anything (see license here https://github.com/royerlab/napari-segment-anything/blob/main/LICENSE)  
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
