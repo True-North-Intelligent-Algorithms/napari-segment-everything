@@ -301,6 +301,10 @@ def add_properties_to_label_image(orig_image, sorted_results):
         result["circularity"] = (
             4 * np.pi * regions[0].area / (regions[0].perimeter ** 2)
         )
+        # for small pixelated objects, circularity can be > 1 so we cap it
+        if result["circularity"] > 1:
+            result["circularity"] = 1
+            
         result["solidity"] = regions[0].solidity
         intensity_pixels = intensity[coords]
         result["mean_intensity"] = np.mean(intensity_pixels)
