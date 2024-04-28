@@ -164,18 +164,17 @@ def get_bounding_boxes(
 ):
     if detector_model == "YOLOv8":
         model = YoloDetector(
-            str(get_weights_path("ObjectAwareModel")), device="cuda"
+            str(get_weights_path("ObjectAwareModel")), device=device
         )
         bounding_boxes = model.get_bounding_boxes(
             image, conf=conf, iou=iou, imgsz=imgsz, max_det=max_det
         )
     elif detector_model == "Finetuned":
         model = RcnnDetector(
-            str(get_weights_path("ObjectAwareModel_Cell_FT")),
-            device="cuda",
+            str(get_weights_path("ObjectAwareModel_Cell_FT")), device=device
         )
         bounding_boxes = model.get_bounding_boxes(image, conf=conf, iou=iou)
-    print(bounding_boxes)
+    #    print(bounding_boxes)
     return bounding_boxes
 
 
@@ -287,6 +286,7 @@ def filter_labels_3d_multi(
 def add_properties_to_label_image(orig_image, sorted_results):
 
     hsv_image = color.rgb2hsv(orig_image)
+    # switch to this? https://forum.image.sc/t/looking-for-a-faster-version-of-rgb2hsv/95214/12
 
     hue = 255 * hsv_image[:, :, 0]
     saturation = 255 * hsv_image[:, :, 1]
