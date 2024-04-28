@@ -388,18 +388,34 @@ class NapariSegmentEverything(QWidget):
         if file_name:
             with open(file_name, "rb") as f:
                 project = pickle.load(f)
-                self.results = project["results"]
+                results = project["results"]
                 image = project["image"]
-                self.viewer.add_image(image)
-                self.image = image
+                self.load_project(image, results)
 
+
+    
+    def load_project(self, image, results):
+        self.results = results
+        self.results = sorted(self.results, key=lambda x: x['area'], reverse=False)
+        label_num = 1
+        for result in self.results:
+            result['keep'] = True
+            result['label_num'] = label_num
+            label_num += 1
+
+       
+        self.image = image
+        add_properties_to_label_image(self.image, self.results)
+        self.viewer.add_image(image)
+        
         self._3D_labels_layer.data = make_label_image_3d(self.results)
         self.viewer.dims.ndisplay = 3
         self._3D_labels_layer.translate = (-len(self.results), 0, 0)
-
-        add_properties_to_label_image(self.image, self.results)
+        
+        self.add_points()
+        self.add_boxes()
         self.update_slider_min_max()
-
+    
     def save_project(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(
