@@ -67,7 +67,7 @@ def test_bbox():
     """
     image = data.coffee()
     bounding_boxes = get_bounding_boxes(
-        image, detector_model="YOLOv8", device=device, conf=0.01, iou=0.99
+        image, detector_model="YOLOv8", device=device, conf=0.5, iou=0.90
     )
     print(f"Length of bounding boxes: {len(bounding_boxes)}")
     assert len(bounding_boxes) > 0
