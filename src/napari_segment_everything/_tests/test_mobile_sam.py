@@ -41,7 +41,7 @@ def test_urls():
             print(f"Request timed out for URL: {url}")
 
 
-def test_mobile_sam(device):
+def test_mobile_sam():
     """
     Tests the mobileSAMv2 process pipeline
     """
@@ -61,7 +61,7 @@ def test_mobile_sam(device):
     assert len(segmentations) == 11
 
 
-def test_bbox(device):
+def test_bbox():
     """
     Test whether bboxes can be generated
     """
@@ -73,7 +73,7 @@ def test_bbox(device):
     assert len(bounding_boxes) > 0
 
 
-def test_RCNN(device):
+def test_RCNN():
     """
     Test RCNN object detection on CPU and CUDA devices.
     """
@@ -85,7 +85,7 @@ def test_RCNN(device):
     assert len(bbox) == 6
 
 
-def test_YOLO(device):
+def test_YOLO():
     """
     Test YOLO object detection on CPU and CUDA devices.
     """
@@ -107,7 +107,7 @@ def test_weights_path():
     assert os.path.exists(os.path.dirname(weights_path))
 
 
-def test_labels(device):
+def test_labels():
     """
     Tests whether region properties can be generated for segmentations for different models
     """
@@ -154,9 +154,9 @@ def test_labels(device):
 
 
 test_urls()
-test_bbox(device)
-test_mobile_sam(device)
-test_RCNN(device)
-test_YOLO(device)
+test_bbox()
+test_mobile_sam()
+test_RCNN()
+test_YOLO()
 test_weights_path()
-test_labels(device)
+test_labels()
