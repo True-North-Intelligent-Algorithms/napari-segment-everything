@@ -18,6 +18,8 @@ import requests
 from gdown.parse_url import parse_url
 
 device = get_device()
+if device == "mps":
+    device = "cpu"
 
 #%%
 def test_urls():
@@ -67,7 +69,7 @@ def test_bbox():
     """
     image = data.coffee()
     bounding_boxes = get_bounding_boxes(
-        image, detector_model="YOLOv8", device=device, conf=0.5, iou=0.90
+        image, detector_model="YOLOv8", device=device, conf=0.9, iou=0.90
     )
     print(f"Length of bounding boxes: {len(bounding_boxes)}")
     assert len(bounding_boxes) > 0
