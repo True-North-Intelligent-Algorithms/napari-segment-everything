@@ -109,8 +109,8 @@ class RcnnDetector(BaseDetector):
     def __init__(self, model_path, device, trainable=True):
         super().__init__(model_path, trainable)
         self.model_type = "FasterRCNN"
-	if device == "mps":
-        	device = "cpu"
+        if device == "mps":
+            device = "cpu"
         self.device = device
         self.model = fasterrcnn_mobilenet_v3_large_fpn(
             box_detections_per_img=500,
