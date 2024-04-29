@@ -178,7 +178,7 @@ def get_bounding_boxes(
     return bounding_boxes
 
 
-def get_mobileSAMv2(image=None, bounding_boxes=None):
+def get_mobileSAMv2(image=None, bounding_boxes=None, device=get_device()):
     """
     Uses a SAM model to make predictions from bounding boxes.
 
@@ -201,7 +201,6 @@ def get_mobileSAMv2(image=None, bounding_boxes=None):
         return
     if image.ndim < 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
     # device = "cpu"
     weights_path_VIT = get_weights_path("efficientvit_l2")
     samV2 = create_MS_model()
@@ -213,7 +212,9 @@ def get_mobileSAMv2(image=None, bounding_boxes=None):
     samV2.eval()
     predictor = SamPredictorV2(samV2)
     predictor.set_image(image)
-    sam_masks = segment_from_bbox(bounding_boxes, predictor, samV2)
+    sam_masks = segment_from_bbox(
+        bounding_boxes, predictor, samV2, device=device
+    )
     del bounding_boxes
 
     gc.collect()
@@ -304,7 +305,7 @@ def add_properties_to_label_image(orig_image, sorted_results):
         # for small pixelated objects, circularity can be > 1 so we cap it
         if result["circularity"] > 1:
             result["circularity"] = 1
-            
+
         result["solidity"] = regions[0].solidity
         intensity_pixels = intensity[coords]
         result["mean_intensity"] = np.mean(intensity_pixels)
