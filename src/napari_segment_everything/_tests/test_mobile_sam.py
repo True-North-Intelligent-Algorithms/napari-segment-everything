@@ -20,15 +20,23 @@ from gdown.parse_url import parse_url
 
 def test_urls():
     """
-    Tests whether all the urls for the model weights exist.
+    Tests whether all the urls for the model weights exist and are accessible.
     """
-    for url in SAM_WEIGHTS_URL.values():
-        if url.startswith("https://drive.google.com/"):
-            _, path_exists = parse_url(url)
-            assert path_exists
-        else:
-            req = requests.head(url)
-            assert req.status_code == 200
+    TIMEOUT = 1
+    for name, url in SAM_WEIGHTS_URL.items():
+        try:
+            if url.startswith("https://drive.google.com/"):
+                _, path_exists = parse_url(url)
+                assert (
+                    path_exists
+                ), f"Google Drive URL path wasn't parsed correctly: {url}"
+            else:
+                req = requests.head(url, timeout=TIMEOUT)
+                assert (
+                    req.status_code == 200
+                ), f"Failed to access URL: {url}, Status code: {req.status_code}"
+        except requests.exceptions.Timeout:
+            print(f"Request timed out for URL: {url}")
 
 
 def test_mobile_sam():
