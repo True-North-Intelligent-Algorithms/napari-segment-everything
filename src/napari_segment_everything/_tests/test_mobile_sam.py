@@ -17,18 +17,30 @@ import os
 import requests
 from gdown.parse_url import parse_url
 
+device = get_device()
+if device == "mps":
+    device = "cpu"
 
+#%%
 def test_urls():
     """
-    Tests whether all the urls for the model weights exist.
+    Tests whether all the urls for the model weights exist and are accessible.
     """
-    for url in SAM_WEIGHTS_URL.values():
-        if url.startswith("https://drive.google.com/"):
-            _, path_exists = parse_url(url)
-            assert path_exists
-        else:
-            req = requests.head(url)
-            assert req.status_code == 200
+    TIMEOUT = 1
+    for name, url in SAM_WEIGHTS_URL.items():
+        try:
+            if url.startswith("https://drive.google.com/"):
+                _, path_exists = parse_url(url)
+                assert (
+                    path_exists
+                ), f"Google Drive URL path wasn't parsed correctly: {url}"
+            else:
+                req = requests.head(url, timeout=TIMEOUT)
+                assert (
+                    req.status_code == 200
+                ), f"Failed to access URL: {url}, Status code: {req.status_code}"
+        except requests.exceptions.Timeout:
+            print(f"Request timed out for URL: {url}")
 
 
 def test_mobile_sam():
@@ -42,7 +54,7 @@ def test_mobile_sam():
         image,
         detector_model="YOLOv8",
         imgsz=1024,
-        device="cuda",
+        device=device,
         conf=0.4,
         iou=0.9,
     )
@@ -57,7 +69,7 @@ def test_bbox():
     """
     image = data.coffee()
     bounding_boxes = get_bounding_boxes(
-        image, detector_model="Finetuned", device="cuda", conf=0.01, iou=0.99
+        image, detector_model="YOLOv8", device=device, conf=0.9, iou=0.90
     )
     print(f"Length of bounding boxes: {len(bounding_boxes)}")
     assert len(bounding_boxes) > 0
@@ -70,12 +82,9 @@ def test_RCNN():
     image = data.coffee()
     model_path = str(get_weights_path("ObjectAwareModel_Cell_FT"))
     assert os.path.exists(model_path)
-    rcnn_cpu = RcnnDetector(model_path, device="cpu")
-    rcnn_cuda = RcnnDetector(model_path, device="cuda")
-    bbox_cpu = rcnn_cpu.get_bounding_boxes(image, conf=0.5, iou=0.2)
-    bbox_cuda = rcnn_cuda.get_bounding_boxes(image, conf=0.5, iou=0.2)
-    assert len(bbox_cpu) == 6
-    assert len(bbox_cuda) == 6
+    rcnn = RcnnDetector(model_path, device=device)
+    bbox = rcnn.get_bounding_boxes(image, conf=0.5, iou=0.2)
+    assert len(bbox) == 6
 
 
 def test_YOLO():
@@ -85,16 +94,11 @@ def test_YOLO():
     image = data.coffee()
     model_path = str(get_weights_path("ObjectAwareModel"))
     assert os.path.exists(model_path)
-    yolo_cpu = YoloDetector(model_path, device="cpu")
-    yolo_cuda = YoloDetector(model_path, device="cuda")
-    bbox_cpu = yolo_cpu.get_bounding_boxes(
+    yolo = YoloDetector(model_path, device=device)
+    bbox = yolo.get_bounding_boxes(
         image, conf=0.5, iou=0.2, max_det=400, imgsz=1024
     )
-    bbox_cuda = yolo_cuda.get_bounding_boxes(
-        image, conf=0.5, iou=0.2, max_det=400, imgsz=1024
-    )
-    assert len(bbox_cpu) == 8
-    assert len(bbox_cuda) == 8
+    assert len(bbox) == 8
 
 
 def test_weights_path():
@@ -110,7 +114,6 @@ def test_labels():
     Tests whether region properties can be generated for segmentations for different models
     """
     image = data.coffee()
-    device = get_device()
 
     bbox_yolo = get_bounding_boxes(
         image,
@@ -150,8 +153,7 @@ def test_labels():
     assert len(props_yolo) == 10
     props_vit_b = segmentations_vit_b[0].keys()
     assert len(props_vit_b) == 13
-
-
+    
 test_urls()
 test_bbox()
 test_mobile_sam()

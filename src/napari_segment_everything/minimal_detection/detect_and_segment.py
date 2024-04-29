@@ -35,7 +35,7 @@ def batch_iterator(batch_size: int, *args) -> Generator[List[Any], None, None]:
         yield [arg[b * batch_size : (b + 1) * batch_size] for arg in args]
 
 
-def segment_from_bbox(bounding_boxes, predictor, mobilesamv2):
+def segment_from_bbox(bounding_boxes, predictor, mobilesamv2, device):
     """
     Segments everything given the bounding boxes of the objects and the mobileSAMv2 prediction model.
     Code from mobileSAMv2
@@ -43,7 +43,10 @@ def segment_from_bbox(bounding_boxes, predictor, mobilesamv2):
     input_boxes = predictor.transform.apply_boxes(
         bounding_boxes, predictor.original_size
     )  # Does this need to be transformed?
-    input_boxes = torch.from_numpy(input_boxes).cuda()
+    if device == "cuda":
+        input_boxes = torch.from_numpy(input_boxes).cuda()
+    elif device == "cpu":
+        input_boxes = torch.from_numpy(input_boxes)
     sam_mask = []
 
     predicted_ious = []

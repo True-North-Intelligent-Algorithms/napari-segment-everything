@@ -17,6 +17,7 @@ from napari_segment_everything.sam_helper import (
 from napari_segment_everything.sam_helper import (
     get_bounding_boxes,
     get_mobileSAMv2,
+    get_device,
 )
 import pickle
 
@@ -35,7 +36,7 @@ from qtpy.QtWidgets import (
     QMessageBox,
     QTextBrowser,
     QProgressBar,
-    QApplication
+    QApplication,
 )
 
 
@@ -161,7 +162,6 @@ class NapariSegmentEverything(QWidget):
 
         self.stacked_algorithm_params_layout = QStackedWidget()
 
-
         self.bbox_conf_spinner = LabeledSpinner(
             "Bounding Box Confidence", 0, 1, 0.1, None, is_double=True
         )
@@ -185,7 +185,6 @@ class NapariSegmentEverything(QWidget):
         self.yolo_params_layout.addWidget(self.bbox_imgsz_spinner)
         self.yolo_params_layout.addWidget(self.bbbox_max_det_spinner)
         self.widgetGroup1.setLayout(self.yolo_params_layout)
-
 
         self.points_per_side_spinner = LabeledSpinner(
             "Points per side", 4, 100, 32, None
@@ -392,30 +391,29 @@ class NapariSegmentEverything(QWidget):
                 image = project["image"]
                 self.load_project(image, results)
 
-
-    
     def load_project(self, image, results):
         self.results = results
-        self.results = sorted(self.results, key=lambda x: x['area'], reverse=False)
+        self.results = sorted(
+            self.results, key=lambda x: x["area"], reverse=False
+        )
         label_num = 1
         for result in self.results:
-            result['keep'] = True
-            result['label_num'] = label_num
+            result["keep"] = True
+            result["label_num"] = label_num
             label_num += 1
 
-       
         self.image = image
         add_properties_to_label_image(self.image, self.results)
         self.viewer.add_image(image)
-        
+
         self._3D_labels_layer.data = make_label_image_3d(self.results)
         self.viewer.dims.ndisplay = 3
         self._3D_labels_layer.translate = (-len(self.results), 0, 0)
-        
+
         self.add_points()
         self.add_boxes()
         self.update_slider_min_max()
-    
+
     def save_project(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(
@@ -485,7 +483,7 @@ class NapariSegmentEverything(QWidget):
             bounding_boxes = get_bounding_boxes(
                 self.image,
                 detector_model="Finetuned",
-                device="cuda",
+                device=get_device(),
                 conf=bbox_conf,
                 iou=bbox_iou,
             )
@@ -511,11 +509,10 @@ class NapariSegmentEverything(QWidget):
             )
             self.textBrowser_log.repaint()
             QApplication.processEvents()
-
             bounding_boxes = get_bounding_boxes(
                 self.image,
                 detector_model="YOLOv8",
-                device="cuda",
+                device=get_device(),
                 conf=bbox_conf,
                 iou=bbox_iou,
                 imgsz=bbox_imgsz,
