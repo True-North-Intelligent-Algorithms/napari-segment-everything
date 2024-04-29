@@ -132,8 +132,11 @@ def get_sam_automatic_mask_generator(
     crop_n_layers=1,
 ):
 
+    device = get_device()
+    if device == "mps":
+        device = "cpu"
     sam = sam_model_registry[model_type](get_weights_path(model_type))
-    sam.to(get_device())
+    sam.to()
     sam_anything_predictor = SamAutomaticMaskGenerator(
         sam,
         points_per_side=int(points_per_side),
@@ -208,6 +211,8 @@ def get_mobileSAMv2(image=None, bounding_boxes=None, device=get_device()):
     samV2.image_encoder = sam_model_registry["efficientvit_l2"](
         weights_path_VIT
     )
+    if device == "mps":
+        device="cpu"
     samV2.to(device=device)
     samV2.eval()
     predictor = SamPredictorV2(samV2)

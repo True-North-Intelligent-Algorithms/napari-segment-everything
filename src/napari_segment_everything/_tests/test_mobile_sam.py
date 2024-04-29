@@ -19,7 +19,7 @@ from gdown.parse_url import parse_url
 
 device = get_device()
 
-
+#%%
 def test_urls():
     """
     Tests whether all the urls for the model weights exist and are accessible.
@@ -56,7 +56,7 @@ def test_mobile_sam():
         conf=0.4,
         iou=0.9,
     )
-    segmentations = get_mobileSAMv2(image, bounding_boxes, device)
+    segmentations = get_mobileSAMv2(image, bounding_boxes)
 
     assert len(segmentations) == 11
 
@@ -67,7 +67,7 @@ def test_bbox():
     """
     image = data.coffee()
     bounding_boxes = get_bounding_boxes(
-        image, detector_model="Finetuned", device=device, conf=0.01, iou=0.99
+        image, detector_model="YOLOv8", device=device, conf=0.01, iou=0.99
     )
     print(f"Length of bounding boxes: {len(bounding_boxes)}")
     assert len(bounding_boxes) > 0
@@ -151,8 +151,7 @@ def test_labels():
     assert len(props_yolo) == 10
     props_vit_b = segmentations_vit_b[0].keys()
     assert len(props_vit_b) == 13
-
-
+    
 test_urls()
 test_bbox()
 test_mobile_sam()
