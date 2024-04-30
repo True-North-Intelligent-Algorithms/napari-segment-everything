@@ -132,8 +132,11 @@ def get_sam_automatic_mask_generator(
     crop_n_layers=1,
 ):
 
+    device = get_device()
+    if device == "mps":
+        device = "cpu"
     sam = sam_model_registry[model_type](get_weights_path(model_type))
-    sam.to(get_device())
+    sam.to()
     sam_anything_predictor = SamAutomaticMaskGenerator(
         sam,
         points_per_side=int(points_per_side),
@@ -178,7 +181,7 @@ def get_bounding_boxes(
     return bounding_boxes
 
 
-def get_mobileSAMv2(image=None, bounding_boxes=None):
+def get_mobileSAMv2(image=None, bounding_boxes=None, device=get_device()):
     """
     Uses a SAM model to make predictions from bounding boxes.
 
@@ -201,7 +204,6 @@ def get_mobileSAMv2(image=None, bounding_boxes=None):
         return
     if image.ndim < 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
     # device = "cpu"
     weights_path_VIT = get_weights_path("efficientvit_l2")
     samV2 = create_MS_model()
@@ -209,11 +211,15 @@ def get_mobileSAMv2(image=None, bounding_boxes=None):
     samV2.image_encoder = sam_model_registry["efficientvit_l2"](
         weights_path_VIT
     )
+    if device == "mps":
+        device="cpu"
     samV2.to(device=device)
     samV2.eval()
     predictor = SamPredictorV2(samV2)
     predictor.set_image(image)
-    sam_masks = segment_from_bbox(bounding_boxes, predictor, samV2)
+    sam_masks = segment_from_bbox(
+        bounding_boxes, predictor, samV2, device=device
+    )
     del bounding_boxes
 
     gc.collect()
@@ -304,7 +310,7 @@ def add_properties_to_label_image(orig_image, sorted_results):
         # for small pixelated objects, circularity can be > 1 so we cap it
         if result["circularity"] > 1:
             result["circularity"] = 1
-            
+
         result["solidity"] = regions[0].solidity
         intensity_pixels = intensity[coords]
         result["mean_intensity"] = np.mean(intensity_pixels)
