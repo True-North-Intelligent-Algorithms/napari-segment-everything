@@ -1,21 +1,23 @@
 # import skimag example images
+import os
+
+import requests
+from gdown.parse_url import parse_url
 from skimage import data
-from napari_segment_everything.sam_helper import (
-    get_mobileSAMv2,
-    get_bounding_boxes,
-    add_properties_to_label_image,
-    SAM_WEIGHTS_URL,
-    get_weights_path,
-    get_device,
-    get_sam_automatic_mask_generator,
-)
+
 from napari_segment_everything.minimal_detection.prompt_generator import (
     RcnnDetector,
     YoloDetector,
 )
-import os
-import requests
-from gdown.parse_url import parse_url
+from napari_segment_everything.sam_helper import (
+    SAM_WEIGHTS_URL,
+    add_properties_to_label_image,
+    get_bounding_boxes,
+    get_device,
+    get_mobileSAMv2,
+    get_sam_automatic_mask_generator,
+    get_weights_path,
+)
 
 device = get_device()
 if device == "mps":
@@ -153,7 +155,7 @@ def test_labels():
     assert len(props_yolo) == 10
     props_vit_b = segmentations_vit_b[0].keys()
     assert len(props_vit_b) == 13
-    
+
 test_urls()
 test_bbox()
 test_mobile_sam()

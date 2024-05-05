@@ -1,42 +1,41 @@
-from magicgui.widgets import create_widget
-from napari.layers import Image
-import numpy as np
-from skimage import color, util
+import pickle
 from typing import Optional
 
-from napari_segment_everything.widgets import (
-    LabeledSpinner,
-    LabeledMinMaxSlider,
-)
-from napari_segment_everything.sam_helper import (
-    get_sam_automatic_mask_generator,
-    make_label_image_3d,
-    add_properties_to_label_image,
-    filter_labels_3d_multi,
-)
-from napari_segment_everything.sam_helper import (
-    get_bounding_boxes,
-    get_mobileSAMv2,
-    get_device,
-)
-import pickle
+import numpy as np
+from magicgui.widgets import create_widget
+from napari.layers import Image
 
 # qypt improts
 from qtpy.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QFileDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QSizePolicy,
+    QStackedWidget,
+    QTextBrowser,
     QVBoxLayout,
     QWidget,
-    QPushButton,
-    QComboBox,
-    QLabel,
-    QHBoxLayout,
-    QFileDialog,
-    QStackedWidget,
-    QGroupBox,
-    QSizePolicy,
-    QMessageBox,
-    QTextBrowser,
-    QProgressBar,
-    QApplication,
+)
+from skimage import color, util
+
+from napari_segment_everything.sam_helper import (
+    add_properties_to_label_image,
+    filter_labels_3d_multi,
+    get_bounding_boxes,
+    get_device,
+    get_mobileSAMv2,
+    get_sam_automatic_mask_generator,
+    make_label_image_3d,
+)
+from napari_segment_everything.widgets import (
+    LabeledMinMaxSlider,
+    LabeledSpinner,
 )
 
 
@@ -65,7 +64,7 @@ class NapariSegmentEverything(QWidget):
         )
         self.load_image(self.im_layer_widget.value)
 
-        self._pts_layer = self.viewer.add_points(name="SAM points")
+        self._pts_layer = self.viewer.add_points(name="SAM points", size =2)
 
         self._boxes_layer = self.viewer.add_shapes(
             name="SAM box",
@@ -163,7 +162,7 @@ class NapariSegmentEverything(QWidget):
         self.stacked_algorithm_params_layout = QStackedWidget()
 
         self.bbox_conf_spinner = LabeledSpinner(
-            "Bounding Box Confidence", 0, 1, 0.1, None, is_double=True
+            "Bounding Box Confidence", 0, 1, 0.1, None, is_double=True, step =  0.001
         )
 
         self.bbox_iou_spinner = LabeledSpinner(

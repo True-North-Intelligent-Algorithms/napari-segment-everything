@@ -1,4 +1,5 @@
 import napari
+
 from napari_segment_everything import segment_everything
 
 viewer = napari.Viewer()

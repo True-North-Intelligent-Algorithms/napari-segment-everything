@@ -1,34 +1,34 @@
+import gc
+import urllib.request
+import warnings
+from pathlib import Path
+from typing import Optional
+
+import cv2
+import gdown
+import numpy as np
+import toolz as tz
+import torch
+from napari.utils import progress
 from segment_anything import SamPredictor
 from segment_anything.automatic_mask_generator import SamAutomaticMaskGenerator
+from skimage import color
+from skimage.measure import regionprops
+
 from napari_segment_everything.minimal_detection.detect_and_segment import (
     create_MS_model,
     segment_from_bbox,
 )
 from napari_segment_everything.minimal_detection.mobilesamv2 import (
-    sam_model_registry,
     SamPredictor as SamPredictorV2,
 )
-
+from napari_segment_everything.minimal_detection.mobilesamv2 import (
+    sam_model_registry,
+)
 from napari_segment_everything.minimal_detection.prompt_generator import (
     RcnnDetector,
     YoloDetector,
 )
-
-import urllib.request
-import warnings
-from pathlib import Path
-from typing import Optional
-from skimage.measure import regionprops, label
-from skimage import color
-import cv2
-import torch
-import toolz as tz
-from napari.utils import progress
-
-import numpy as np
-import gdown
-import gc
-
 
 # Some code in this file copied from https://github.com/royerlab/napari-segment-anything/blob/main/src/napari_segment_anything/utils.py
 

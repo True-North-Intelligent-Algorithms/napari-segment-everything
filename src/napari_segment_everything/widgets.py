@@ -1,15 +1,15 @@
 # qypt imports
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
-    QVBoxLayout,
+    QDoubleSpinBox,
     QHBoxLayout,
     QLabel,
-    QSpinBox,
-    QDoubleSpinBox,
-    QWidget,
     QSlider,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
 )
 
-from qtpy.QtCore import Qt
 
 class LabeledMinMaxSlider(QWidget):
     def __init__(self, text, min_value, max_value, initial_min_value, initial_max_value, tick_interval, stat, change_value_method, scale_slider = False):
@@ -46,7 +46,7 @@ class LabeledMinMaxSlider(QWidget):
         self.max_spinbox.setKeyboardTracking(False)
 
         self.max_slider = QSlider(Qt.Horizontal)
-        
+
         if scale_slider == False:
             self.max_slider.setMinimum(min_value)
             self.max_slider.setMaximum(max_value)
@@ -59,7 +59,7 @@ class LabeledMinMaxSlider(QWidget):
             self.max_slider.setValue(100 * int((initial_max_value - min_value) / (max_value - min_value)))
             self.max_slider.setTickPosition(QSlider.TicksBelow)
             self.max_slider.setTickInterval(1)
-        
+
         self.max_slider.valueChanged.connect(self.change_value)
 
         self.min_layout = QHBoxLayout()
@@ -76,14 +76,14 @@ class LabeledMinMaxSlider(QWidget):
         self.layout.setContentsMargins(5, 1, 5, 1)  # adjust the margins around the layout
         # set spacing
         self.layout.setSpacing(0)
-        
+
         #self.layout.addWidget(self.label)
         self.layout.addLayout(self.min_layout)
         self.layout.addLayout(self.max_layout)
         self.setLayout(self.layout)
 
         self.stat = stat
-        self.change_value_method = change_value_method 
+        self.change_value_method = change_value_method
 
     def change_value(self):
         sender = self.sender()
@@ -137,7 +137,7 @@ class LabeledMinMaxSpinners(QWidget):
         self.max_spinbox = QDoubleSpinBox()
         self.max_spinbox.setRange(min_value, max_value)
         self.max_spinbox.setValue(initial_max_value)
-        
+
         if change_value_method is not None:
             self.max_spinbox.valueChanged.connect(change_value_method)
 
@@ -151,7 +151,7 @@ class LabeledMinMaxSpinners(QWidget):
         self.setLayout(self.layout)
 
 class LabeledSpinner(QWidget):
-    def __init__(self, label_text, min_value, max_value, default_value, change_value_method, is_double=False):
+    def __init__(self, label_text, min_value, max_value, default_value, change_value_method, is_double=False, step = -1):
         super().__init__()
 
         self.label = QLabel(label_text)
@@ -161,6 +161,11 @@ class LabeledSpinner(QWidget):
 
         if change_value_method is not None:
             self.spinner.valueChanged.connect(change_value_method)
+
+        if step > 0:
+            self.spinner.setSingleStep(step)
+            if is_double:
+                self.spinner.setDecimals(3)
 
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(10, 2, 10, 2)  # adjust the margins around the layout
